@@ -2,6 +2,7 @@ mod config;
 mod cpu;
 
 fn main() {
-    let emulator = config::Emulator::default();
+    let mut emulator = config::Emulator::default();
+    cpu::run_next_instruction(&mut emulator);
     println!("{}", emulator)
 }
