@@ -1,4 +1,5 @@
 use bitflags::bitflags;
+use std::fmt;
 
 // bitflags
 bitflags! {
@@ -14,6 +15,19 @@ bitflags! {
     }
 }
 
+impl fmt::Display for Status {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "(c: {}, z: {}, i: {}, d: {}, b: {}, v: {}, n: {})\n",
+            self.bits & Status::C.bits,
+            self.bits & Status::Z.bits,
+            self.bits & Status::I.bits,
+            self.bits & Status::D.bits,
+            self.bits & Status::B.bits,
+            self.bits & Status::V.bits,
+            self.bits & Status::N.bits)
+    }
+}
+
 // registers
 #[derive(Default)]
 pub struct Registers {
@@ -23,4 +37,11 @@ pub struct Registers {
     pub sp: u8, // stack pointer, points to current stack address in memory
     pub pc: u16, // program counter, points to next instruction address in memory
     pub status: Status // status flags
+}
+
+impl fmt::Display for Registers {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "\n\t\ta: {}\n\t\tx: {}\n\t\ty: {}\n\t\tsp: {}\n\t\tpc: {}\n\t\tstatus: {}"
+        , self.a, self.x, self.y, self.sp, self.pc, self.status)
+    }
 }

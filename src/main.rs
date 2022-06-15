@@ -1,5 +1,7 @@
+mod config;
 mod cpu;
 
 fn main() {
-    cpu::initialize();
+    let emulator = config::Emulator::default();
+    println!("{}", emulator)
 }
