@@ -1,9 +1,11 @@
 use crate::cpu;
+use crate::ram;
 use std::fmt;
 
 #[derive(Default)]
 pub struct Emulator {
-    pub cpu: cpu::CPU
+    pub cpu: cpu::CPU,
+    pub ram: ram::RAM
 }
 
 impl fmt::Display for Emulator {

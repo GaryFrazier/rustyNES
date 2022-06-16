@@ -1,5 +1,6 @@
 mod config;
 mod cpu;
+mod ram;
 
 fn main() {
     let mut emulator = config::Emulator::default();

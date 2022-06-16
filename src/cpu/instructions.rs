@@ -13,7 +13,7 @@ AY - absolute Y
 IX - indirect X
 IY - indirect Y
 */
-pub static OPCODES: [(&str, i32, i32, fn(&mut config::Emulator)); 1] = [
+pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator)); 1] = [
     ("ADC- I",  0x69,  2, |emulator: &mut config::Emulator|{
         emulator.cpu.registers.a = 1;
     }) //todo func is an example, relace it

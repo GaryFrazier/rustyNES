@@ -20,10 +20,16 @@ impl fmt::Display for CPU {
 }
 
 pub fn run_next_instruction(emulator: &mut config::Emulator) {
-    // read pc, get next inst
-    execute_instruction(emulator, instructions::OPCODES[0]);
+    // read next byte at the program counter location to get the opcode
+    let opcode = emulator.ram.read_u8(emulator.cpu.registers.pc.into());
+    emulator.cpu.registers.pc += 1;
+
+    let mut opcode_iterator = instructions::OPCODES.iter();
+
+    // we unwrap the find here so it crashes if the opcode is invalid, for now
+    execute_instruction(emulator, *opcode_iterator.find(|&x| x.1 == opcode).unwrap());
 }
 
-fn execute_instruction(emulator: &mut config::Emulator, instruction: (&str, i32, i32, fn(&mut config::Emulator))) {
+fn execute_instruction(emulator: &mut config::Emulator, instruction: (&str, u8, i32, fn(&mut config::Emulator))) {
     instruction.3(emulator);
 }
