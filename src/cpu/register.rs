@@ -17,14 +17,15 @@ bitflags! {
 
 impl fmt::Display for Status {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // cast as u8 to show as 1 or 0, instead of the actual bitflag value
         write!(f, "(c: {}, z: {}, i: {}, d: {}, b: {}, v: {}, n: {})\n",
-            self.bits & Status::C.bits,
-            self.bits & Status::Z.bits,
-            self.bits & Status::I.bits,
-            self.bits & Status::D.bits,
-            self.bits & Status::B.bits,
-            self.bits & Status::V.bits,
-            self.bits & Status::N.bits)
+            (self.bits & Status::C.bits == Status::C.bits) as u8,
+            (self.bits & Status::Z.bits == Status::Z.bits) as u8,
+            (self.bits & Status::I.bits == Status::I.bits) as u8,
+            (self.bits & Status::D.bits == Status::D.bits) as u8,
+            (self.bits & Status::B.bits == Status::B.bits) as u8,
+            (self.bits & Status::V.bits == Status::V.bits) as u8,
+            (self.bits & Status::N.bits == Status::N.bits) as u8)
     }
 }
 

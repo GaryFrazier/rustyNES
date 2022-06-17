@@ -31,6 +31,13 @@ pub fn run_cycle(emulator: &mut config::Emulator) {
     emulator.cpu.wait_cycles -= 1;
 }
 
+// reads next byte in program, increments program counter
+pub fn read_program_byte(emulator: &mut config::Emulator) -> u8 {
+    let val = emulator.ram.read_u8(emulator.cpu.registers.pc.into());
+    emulator.cpu.registers.pc += 1;
+    return val;
+}
+
 fn run_next_instruction(emulator: &mut config::Emulator) {
     // read next byte at the program counter location to get the opcode
     let opcode = emulator.ram.read_u8(emulator.cpu.registers.pc.into());
