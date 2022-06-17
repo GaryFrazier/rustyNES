@@ -10,16 +10,28 @@ use crate::config;
 
 #[derive(Default)]
 pub struct CPU {
-    pub registers: register::Registers
+    pub registers: register::Registers,
+    pub cycle: u32,
+    pub wait_cycles: u32
 }
 
 impl fmt::Display for CPU {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "registers: {}", self.registers)
+        write!(f, "registers: {}\n\tcycle: {}\n\twait_cycles: {}", self.registers, self.cycle, self.wait_cycles)
     }
 }
 
-pub fn run_next_instruction(emulator: &mut config::Emulator) {
+// runs one clock cycle on the cpu, if the previous instruction took longer than a cycle
+// it sets the wait_cycles property, and this fn will do nothing untill the wait_cycles is decremented to 0
+pub fn run_cycle(emulator: &mut config::Emulator) {
+    if emulator.cpu.wait_cycles == 0 {
+        run_next_instruction(emulator);
+    }
+
+    emulator.cpu.wait_cycles -= 1;
+}
+
+fn run_next_instruction(emulator: &mut config::Emulator) {
     // read next byte at the program counter location to get the opcode
     let opcode = emulator.ram.read_u8(emulator.cpu.registers.pc.into());
     emulator.cpu.registers.pc += 1;
@@ -27,9 +39,10 @@ pub fn run_next_instruction(emulator: &mut config::Emulator) {
     let mut opcode_iterator = instructions::OPCODES.iter();
 
     // we unwrap the find here so it crashes if the opcode is invalid, for now
-    execute_instruction(emulator, *opcode_iterator.find(|&x| x.1 == opcode).unwrap());
+    emulator.cpu.wait_cycles = execute_instruction(emulator, *opcode_iterator.find(|&x| x.1 == opcode).unwrap());
 }
 
-fn execute_instruction(emulator: &mut config::Emulator, instruction: (&str, u8, i32, fn(&mut config::Emulator))) {
-    instruction.3(emulator);
+// executes the given instruction on the emulator, returns number of cycles it took to complete
+fn execute_instruction(emulator: &mut config::Emulator, instruction: (&str, u8, i32, fn(&mut config::Emulator) -> u32)) -> u32 {
+    return instruction.3(emulator);
 }

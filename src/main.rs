@@ -4,6 +4,6 @@ mod ram;
 
 fn main() {
     let mut emulator = config::Emulator::default();
-    cpu::run_next_instruction(&mut emulator);
+    cpu::run_cycle(&mut emulator);
     println!("{}", emulator)
 }
