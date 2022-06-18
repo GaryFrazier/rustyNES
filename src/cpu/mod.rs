@@ -38,6 +38,12 @@ pub fn read_program_byte(emulator: &mut config::Emulator) -> u8 {
     return val;
 }
 
+pub fn read_program_word(emulator: &mut config::Emulator) -> u16 {
+    let val = emulator.ram.read_u16(emulator.cpu.registers.pc.into());
+    emulator.cpu.registers.pc += 2;
+    return val;
+}
+
 fn run_next_instruction(emulator: &mut config::Emulator) {
     // read next byte at the program counter location to get the opcode
     let opcode = emulator.ram.read_u8(emulator.cpu.registers.pc.into());

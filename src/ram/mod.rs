@@ -22,7 +22,6 @@ pub struct RAM {
 pub enum AddressingMode {
     ZeroPage { address: u8},
     ZeroPageX { address: u8, x: u8 },
-    ZeroPageY { address: u8, y: u8 },
     Absolute { address: u16 },
     AbsoluteX { address: u16, x: u8 },
     AbsoluteY { address: u16, y: u8 },
@@ -59,7 +58,7 @@ impl RAM {
     }
 
     pub fn read_u16(&self, address: usize ) -> u16 {
-        u8::from_le_bytes(self.read(address, 2).try_into().expect("tried to parse u16 with incorrect length slice"))
+        u16::from_le_bytes(self.read(address, 2).try_into().expect("tried to parse u16 with incorrect length slice"))
     }
 
     // return value at address as well as a bool indicating if a page cross happened
@@ -73,19 +72,33 @@ impl RAM {
                 page_cross = false;
             },
             AddressingMode::ZeroPageX { address, x } => {
-                let calculated_address: u16 = address as u16 + x as u16;
-                value = self.read_u8((calculated_address & 0xFF).into());
-                page_cross = calculated_address > 0xFF;
-            },
-            AddressingMode::ZeroPageY { address, y } => {
-                let calculated_address: u16 = address as u16 + y as u16;
-                value = self.read_u8((calculated_address & 0xFF).into());
-                page_cross = calculated_address > 0xFF;
+                value = self.read_u8(((address as u16 + x as u16) & 0xFF).into());
+                page_cross = false;
             },
             AddressingMode::Absolute { address } => {
                 value = self.read_u8(address.into());
                 page_cross = false;
-            }
+            },
+            AddressingMode::AbsoluteX { address, x } => {
+                value = self.read_u8((address + x as u16).into());
+                page_cross = address & 0xFF + x as u16 > 0xFF;
+            },
+            AddressingMode::AbsoluteY { address, y } => {
+                value = self.read_u8((address + y as u16).into());
+                page_cross = address & 0xFF + y as u16 > 0xFF;
+            },
+            AddressingMode::IndirectX { address, x } => {
+                let calculated_address: u16 = address as u16 + x as u16;
+                let indexed_value = self.read_u16(calculated_address.into());
+                value = self.read_u8(indexed_value.into());
+                page_cross = false;
+            },
+            AddressingMode::IndirectY { address, y } => {
+                let indexed_value = self.read_u16(address.into());
+                let calculated_address: u16 = indexed_value + y as u16;
+                value = self.read_u8(indexed_value.into());
+                page_cross = calculated_address > 0xFF;
+            },
         }
 
         return (value, page_cross);
