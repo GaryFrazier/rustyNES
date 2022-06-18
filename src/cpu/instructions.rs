@@ -18,6 +18,7 @@ IX - indirect X
 IY - indirect Y
 */
 pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 8] = [
+    // ADC - Add with Carry
     ("ADC - I",  0x69,  2, |emulator: &mut config::Emulator| -> u32 {
         let value = cpu::read_program_byte(emulator);
         adc(emulator, value);
@@ -65,6 +66,10 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 8] = [
         adc(emulator, value);
         return 5 + add_cycle as u32;
     }),
+
+    // AND - Logical AND
+
+
 ];
 
 fn adc(emulator: &mut config::Emulator, value: u8) {

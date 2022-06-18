@@ -33,8 +33,7 @@ pub enum AddressingMode {
 impl Default for RAM {
     fn default() -> RAM {
         RAM {
-            // memory: [0; 0xffff],
-            memory: [0x65; 0xffff],
+            memory: [0; 0xffff],
         }
     }
 }
