@@ -16,9 +16,27 @@ AY - absolute Y
 IX - indirect X
 IY - indirect Y
 */
-pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 1] = [
-    ("ADC- I",  0x69,  2, |emulator: &mut config::Emulator| -> u32 {
+pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 2] = [
+    ("ADC - I",  0x69,  2, |emulator: &mut config::Emulator| -> u32 {
         let add_value: u16 = cpu::read_program_byte(emulator) as u16;
+        let total: u16 = emulator.cpu.registers.a as u16 
+            + add_value
+            + emulator.cpu.registers.status.contains(register::Status::C) as u16;
+
+        // flags
+        emulator.cpu.registers.status.set(register::Status::C, total > 0xFF);
+        emulator.cpu.registers.status.set(register::Status::Z, total & 0xFF == 0);
+        emulator.cpu.registers.status.set(register::Status::V, (emulator.cpu.registers.a as u16 ^ total) & (add_value ^ total) & 0x80 == 0x80); // if pos + pos = neg or neg + neg = pos, explanations here https://forums.nesdev.org/viewtopic.php?t=6331
+        emulator.cpu.registers.status.set(register::Status::N, total & 0x80 == 0x80);
+
+        // registers
+        emulator.cpu.registers.a = (total & 0xFF) as u8;
+        
+        return 2
+    }),
+    ("ADC - Z",  0x65,  2, |emulator: &mut config::Emulator| -> u32 {
+        let addr = cpu::read_program_byte(emulator);
+        let add_value: u16 = emulator.ram.read_u8(addr.into()) as u16;
         let total: u16 = emulator.cpu.registers.a as u16 
             + add_value
             + emulator.cpu.registers.status.contains(register::Status::C) as u16;
@@ -32,6 +50,6 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 1] = [
         // registers
         emulator.cpu.registers.a = (total & 0xFF) as u8;
         
-        return 2
+        return 3
     })
 ];

@@ -18,12 +18,24 @@ pub struct RAM {
     pub memory: [u8; 0xffff]
 }
 
+// see http://www.emulator101.com/6502-addressing-modes.html for how these work
+pub enum AddressingMode {
+    ZeroPage { address: u8},
+    ZeroPageX { address: u8, x: u8 },
+    ZeroPageY { address: u8, y: u8 },
+    Absolute { address: u16 },
+    AbsoluteX { address: u16, x: u8 },
+    AbsoluteY { address: u16, y: u8 },
+    IndirectX { address: u8, x: u8 }, // Indexed Indirect
+    IndirectY { address: u8, y: u8 } // Indirect Indexed
+}
+
 // set default ram here for debug purposes
 impl Default for RAM {
     fn default() -> RAM {
         RAM {
             // memory: [0; 0xffff],
-            memory: [0x69; 0xffff],
+            memory: [0x65; 0xffff],
         }
     }
 }
@@ -44,5 +56,15 @@ impl RAM {
     // read byte array to int (little endian)
     pub fn read_u8(&self, address: usize ) -> u8 {
         u8::from_le_bytes(self.read(address, 1).try_into().expect("tried to parse u8 with incorrect length slice"))
+    }
+
+    pub fn read_with_addressing_mode(addressing_mode: AddressingMode) -> (u8, bool) {
+        match addressing_mode {
+            AddressingMode::ZeroPage { address } => {
+
+            }
+        }
+
+        return (1, true);
     }
 }
