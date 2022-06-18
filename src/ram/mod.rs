@@ -58,13 +58,36 @@ impl RAM {
         u8::from_le_bytes(self.read(address, 1).try_into().expect("tried to parse u8 with incorrect length slice"))
     }
 
-    pub fn read_with_addressing_mode(addressing_mode: AddressingMode) -> (u8, bool) {
+    pub fn read_u16(&self, address: usize ) -> u16 {
+        u8::from_le_bytes(self.read(address, 2).try_into().expect("tried to parse u16 with incorrect length slice"))
+    }
+
+    // return value at address as well as a bool indicating if a page cross happened
+    pub fn read_with_addressing_mode(&self, addressing_mode: AddressingMode) -> (u8, bool) {
+        let value: u8;
+        let page_cross: bool;
+
         match addressing_mode {
             AddressingMode::ZeroPage { address } => {
-
+                value = self.read_u8(address.into());
+                page_cross = false;
+            },
+            AddressingMode::ZeroPageX { address, x } => {
+                let calculated_address: u16 = address as u16 + x as u16;
+                value = self.read_u8((calculated_address & 0xFF).into());
+                page_cross = calculated_address > 0xFF;
+            },
+            AddressingMode::ZeroPageY { address, y } => {
+                let calculated_address: u16 = address as u16 + y as u16;
+                value = self.read_u8((calculated_address & 0xFF).into());
+                page_cross = calculated_address > 0xFF;
+            },
+            AddressingMode::Absolute { address } => {
+                value = self.read_u8(address.into());
+                page_cross = false;
             }
         }
 
-        return (1, true);
+        return (value, page_cross);
     }
 }
