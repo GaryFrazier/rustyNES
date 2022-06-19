@@ -1,6 +1,11 @@
 // see structure here https://www.nesdev.org/wiki/INES
 pub struct ROM {
-    pub header: Header
+    pub header: Header,
+    pub trainer: [u8; 0x200], // only used if trainer header is set
+    pub prg_rom: Vec<u8>,
+    pub chr_rom: Vec<u8>,
+    pub playchoice_inst_rom: [u8; 0x2000], // only used if playchoice stuff header is set
+    pub playchoice_prom: [u8; 0x20], // only used if playchoice stuff header is set
 }
 
 pub struct Header {
@@ -34,7 +39,7 @@ pub struct Header {
     // 2 empty bytes
     pub has_prg_ram: bool,
     pub bus_conflicts: bool,
-    
+
     // 2 more empty bytes
-    pub padding: [u8; 0x5],
+    // pub padding: [u8; 0x5],
 }
