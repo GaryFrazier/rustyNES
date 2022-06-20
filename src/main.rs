@@ -1,9 +1,21 @@
 mod config;
 mod cpu;
 mod ram;
+mod rom;
+use std::env;
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+    let rom_file_name = (&args[1]).to_string();
+    boot(rom_file_name);
+}
+
+fn boot(file_name: String) {
     let mut emulator = config::Emulator::default();
+    match emulator.rom.load_file(&file_name) {
+        Ok(()) => println!("{} loaded", file_name),
+        Err(error) => panic!("Problem opening the file: {:?}", error),
+    };
     cpu::run_cycle(&mut emulator);
-    println!("{}", emulator)
+    println!("{}", emulator);
 }
