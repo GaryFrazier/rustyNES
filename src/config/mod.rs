@@ -12,6 +12,6 @@ pub struct Emulator {
 
 impl fmt::Display for Emulator {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "cpu:\n\t{}", self.cpu)
+        write!(f, "rom\n\t{}\ncpu:\n\t{}", self.rom, self.cpu)
     }
 }
