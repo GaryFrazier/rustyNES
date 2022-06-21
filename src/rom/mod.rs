@@ -116,11 +116,26 @@ impl ROM {
         
         // Read header to determine how to load rest of file.
         self.load_header(&buffer);
-        for value in buffer {
-            //println!("BYTE: {}", value);
-        }
+        self.load_body(&buffer);
 
         Ok(())
+    }
+
+    fn load_body(&mut self, buffer: &Vec<u8>) {
+        let mut memory_counter: u32 = 0xF; //starts after header
+
+        if self.header.trainer {
+            self.trainer = (buffer[memory_counter as usize..(memory_counter + 0x200) as usize]).try_into().unwrap();
+            memory_counter += 0x200 as u32;
+        }
+        
+        self.prg_rom.extend_from_slice(&buffer[memory_counter as usize..(memory_counter + (0x4000 * self.header.prg_rom_length as u32)) as usize]);
+        memory_counter += 0x4000 + self.header.prg_rom_length as u32;
+
+        self.chr_rom.extend_from_slice(&buffer[memory_counter as usize..(memory_counter + (0x2000 * self.header.chr_rom_length as u32)) as usize]);
+        // memory_counter += 0x2000 + self.header.chr_rom_length as u32;
+
+        // TODO: playchoice stuff here once I read more on it
     }
 
     fn load_header(&mut self, buffer: &Vec<u8>) {
