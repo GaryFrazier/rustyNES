@@ -3,6 +3,8 @@ use std::io::Read;
 use std::io::BufReader;
 use std::fs::File;
 use std::fmt;
+use crate::config;
+mod mapper;
 
 // see structure here https://www.nesdev.org/wiki/INES
 pub struct ROM {
@@ -168,4 +170,16 @@ impl ROM {
         self.header.has_prg_ram = flags10 & 0x10 == 0x0;
         self.header.bus_conflicts = flags10 & 0x20 == 0x20;
     }
+}
+
+fn get_mapper(emulator: &config::Emulator) -> (u8, fn(&mut config::Emulator)) {
+    let mut mapper_iterator = mapper::MAPPERS.iter();
+
+    // we unwrap the find here so it crashes if the mapper is invalid, for now
+    return *mapper_iterator.find(|&x| x.0 == emulator.rom.header.mapper).unwrap();
+}
+
+pub fn init_mapper(emulator: &mut config::Emulator) {
+    let mapper = get_mapper(emulator);
+    mapper.1(emulator);
 }

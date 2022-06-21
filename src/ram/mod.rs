@@ -102,4 +102,13 @@ impl RAM {
 
         return (value, page_cross);
     }
+
+    pub fn write_block(&mut self, address: usize, data: &[u8]) {
+        let len = data.len() - 1; // todo: ensure not off by 1
+        let mut i: usize = 0;
+        while i < len {
+            self.memory[address + i] = data[i];
+            i += 1;
+        }
+    }
 }

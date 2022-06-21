@@ -16,6 +16,8 @@ fn boot(file_name: String) {
         Ok(()) => println!("{} loaded", file_name),
         Err(error) => panic!("Problem opening the file: {:?}", error),
     };
+
+    rom::init_mapper(&mut emulator);
     //cpu::run_cycle(&mut emulator);
     println!("{}", emulator);
 }
