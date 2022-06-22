@@ -20,7 +20,7 @@ IX - indirect X
 IY - indirect Y
 R - relative
 */
-pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 33] = [
+pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 97] = [
     // ADC - Add with Carry
     ("ADC - I",  0x69,  2, |emulator: &mut config::Emulator| -> u32 {
         let value = cpu::read_program_byte(emulator);
@@ -308,19 +308,19 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 33] = [
     // CPY - Compare Y Register
     ("CPY - I",  0xC0,  2, |emulator: &mut config::Emulator| -> u32 {
         let value = cpu::read_program_byte(emulator);
-        cpx(emulator, value);
+        cpy(emulator, value);
         return 2;
     }),
     ("CPY - Z",  0xC4,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
         let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::ZeroPage { address });
-        cpx(emulator, value);
+        cpy(emulator, value);
         return 3;
     }),
     ("CPY - A",  0xCC,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
         let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::Absolute { address });
-        cpx(emulator, value);
+        cpy(emulator, value);
         return 4;
     }),
 
@@ -587,6 +587,45 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 33] = [
         ldy(emulator, value);
         return 4 + add_cycle as u32;
     }),
+
+    // LSR - Logical Shift Right
+    ("LSR - A",  0x4A,  1, |emulator: &mut config::Emulator| -> u32 {
+        emulator.cpu.registers.a = lsr(emulator, emulator.cpu.registers.a);
+        return 2;
+    }),
+    ("LSR - Z",  0x46,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::ZeroPage { address });
+        let result = lsr(emulator, value);
+        ram::write_with_addressing_mode(&mut emulator.cpu.memory, &[result], ram::AddressingMode::ZeroPage { address });
+        return 5;
+    }),
+    ("LSR - ZX",  0x56,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        let result = lsr(emulator, value);
+        ram::write_with_addressing_mode(&mut emulator.cpu.memory, &[result], ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        return 6;
+    }),
+    ("LSR - A",  0x4E,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::Absolute { address });
+        let result = lsr(emulator, value);
+        ram::write_with_addressing_mode(&mut emulator.cpu.memory, &[result], ram::AddressingMode::Absolute { address });
+        return 6;
+    }),
+    ("LSR - AX",  0x5E,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        let result = lsr(emulator, value);
+        ram::write_with_addressing_mode(&mut emulator.cpu.memory, &[result], ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        return 7;
+    }),
+
+    // NOP - No Operation
+    ("NOP",  0xEA,  1, |_: &mut config::Emulator| -> u32 {
+        return 2;
+    }),
 ];
 
 fn adc(emulator: &mut config::Emulator, value: u8) {
@@ -631,6 +670,18 @@ fn asl(emulator: &mut config::Emulator, value: u8) -> u8 {
 
     // flags
     emulator.cpu.registers.status.set(register::Status::C, value & 0x80 == 0x80);
+    emulator.cpu.registers.status.set(register::Status::Z, result == 0);
+    emulator.cpu.registers.status.set(register::Status::N, result & 0x80 == 0x80);
+    
+    // result
+    return result;
+}
+
+fn lsr(emulator: &mut config::Emulator, value: u8) -> u8 {
+    let result: u8 = value >> 1;
+
+    // flags
+    emulator.cpu.registers.status.set(register::Status::C, value & 0x1 == 0x1);
     emulator.cpu.registers.status.set(register::Status::Z, result == 0);
     emulator.cpu.registers.status.set(register::Status::N, result & 0x80 == 0x80);
     
@@ -687,8 +738,8 @@ fn cpy(emulator: &mut config::Emulator, value: u8) {
 }
 
 fn dec(emulator: &mut config::Emulator, value: u8) -> u8 {
-    let signedValue = value as i8;
-    let result: i8 = signedValue - 1;
+    let signed_value = value as i8;
+    let result: i8 = signed_value - 1;
 
     // flags
     emulator.cpu.registers.status.set(register::Status::Z, result == 0);

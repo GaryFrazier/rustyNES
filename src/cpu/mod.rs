@@ -84,6 +84,6 @@ fn execute_instruction(emulator: &mut config::Emulator, instruction: (&str, u8, 
 }
 
 fn write_stack_u16(emulator: &mut config::Emulator, value: u16) {
-    ram::write_block(&mut emulator.cpu.memory, (0x0100 + emulator.cpu.registers.sp - 1).into(), &value.to_le_bytes());
+    ram::write_block(&mut emulator.cpu.memory, (0x0100 + emulator.cpu.registers.sp as u16 - 1).into(), &value.to_le_bytes());
 	emulator.cpu.registers.sp -= 2;
 }

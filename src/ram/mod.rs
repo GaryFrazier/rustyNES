@@ -89,6 +89,9 @@ pub fn write_with_addressing_mode(memory: &mut [u8], data: &[u8], addressing_mod
         AddressingMode::ZeroPageX { address, x } => {
             write_block(memory, ((address as u16 + x as u16) & 0xFF).into(), data);
         },
+        AddressingMode::ZeroPageY { address, y } => {
+            write_block(memory, ((address as u16 + y as u16) & 0xFF).into(), data);
+        },
         AddressingMode::Absolute { address } => {
             write_block(memory, address.into(), data);
         },
