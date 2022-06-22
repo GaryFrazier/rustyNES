@@ -20,7 +20,7 @@ IX - indirect X
 IY - indirect Y
 R - relative
 */
-pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 106] = [
+pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 109] = [
     // ADC - Add with Carry
     ("ADC - I",  0x69,  2, |emulator: &mut config::Emulator| -> u32 {
         let value = cpu::read_program_byte(emulator);
@@ -680,6 +680,26 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 106] = [
     ("PHA",  0x48,  1, |emulator: &mut config::Emulator| -> u32 {
         cpu::write_stack_u8(emulator, emulator.cpu.registers.a);
         return 3;
+    }),
+
+    // PHP - Push Processor Status
+    ("PHP",  0x08,  1, |emulator: &mut config::Emulator| -> u32 {
+        cpu::write_stack_u8(emulator, emulator.cpu.registers.status.bits());
+        return 3;
+    }),
+
+    // PLA - Pull Accumulator
+    ("PLA",  0x68,  1, |emulator: &mut config::Emulator| -> u32 {
+        emulator.cpu.registers.a = cpu::read_stack_u8(emulator);
+        emulator.cpu.registers.status.set(register::Status::Z, emulator.cpu.registers.a == 0);
+        emulator.cpu.registers.status.set(register::Status::N, emulator.cpu.registers.a & 0x80 == 0x80);
+        return 4;
+    }),
+
+    // PLP - Pull Processor Status
+    ("PLP",  0x28,  1, |emulator: &mut config::Emulator| -> u32 {
+        emulator.cpu.registers.status = register::Status::from_bits(cpu::read_stack_u8(emulator)).unwrap();
+        return 4;
     }),
 ];
 
