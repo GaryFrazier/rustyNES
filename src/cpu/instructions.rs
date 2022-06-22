@@ -364,6 +364,55 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 33] = [
         emulator.cpu.registers.y = dec(emulator, emulator.cpu.registers.y);
         return 2;
     }),
+
+    // EOR - Exclusive OR
+    ("EOR - I",  0x49,  2, |emulator: &mut config::Emulator| -> u32 {
+        let value = cpu::read_program_byte(emulator);
+        eor(emulator, value);
+        return 2;
+    }),
+    ("EOR - Z",  0x45,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::ZeroPage { address });
+        eor(emulator, value);
+        return 3;
+    }),
+    ("EOR - ZX",  0x55,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        eor(emulator, value);
+        return 4;
+    }),
+    ("EOR - A",  0x4D,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::Absolute { address });
+        eor(emulator, value);
+        return 4;
+    }),
+    ("EOR - AX",  0x5D,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, add_cycle) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        eor(emulator, value);
+        return 4 + add_cycle as u32;
+    }),
+    ("EOR - AY",  0x59,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, add_cycle) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::AbsoluteY { address, y: emulator.cpu.registers.y });
+        eor(emulator, value);
+        return 4 + add_cycle as u32;
+    }),
+    ("EOR - IX",  0x41,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::IndirectX { address, x: emulator.cpu.registers.x });
+        eor(emulator, value);
+        return 6;
+    }),
+    ("EOR - IY",  0x51,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, add_cycle) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::IndirectY { address, y: emulator.cpu.registers.y });
+        eor(emulator, value);
+        return 5 + add_cycle as u32;
+    }),
 ];
 
 fn adc(emulator: &mut config::Emulator, value: u8) {
@@ -383,6 +432,17 @@ fn adc(emulator: &mut config::Emulator, value: u8) {
 
 fn and(emulator: &mut config::Emulator, value: u8) {
     let result = emulator.cpu.registers.a & value;
+
+    // flags
+    emulator.cpu.registers.status.set(register::Status::Z, result == 0);
+    emulator.cpu.registers.status.set(register::Status::N, result & 0x80 == 0x80);
+    
+    // registers
+    emulator.cpu.registers.a = result;
+}
+
+fn eor(emulator: &mut config::Emulator, value: u8) {
+    let result = emulator.cpu.registers.a ^ value;
 
     // flags
     emulator.cpu.registers.status.set(register::Status::Z, result == 0);
@@ -462,4 +522,15 @@ fn dec(emulator: &mut config::Emulator, value: u8) -> u8 {
     
     // result
     return result as u8;
+}
+
+fn inc(emulator: &mut config::Emulator, value: u8) -> u8 {
+    let result: u8 = value + 1;
+
+    // flags
+    emulator.cpu.registers.status.set(register::Status::Z, result == 0);
+    emulator.cpu.registers.status.set(register::Status::N, result & 0x80 == 0x80);
+    
+    // result
+    return result;
 }
