@@ -17,8 +17,9 @@ AX - absolute X
 AY - absolute Y
 IX - indirect X
 IY - indirect Y
+R - relative
 */
-pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 21] = [
+pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 22] = [
     // ADC - Add with Carry
     ("ADC - I",  0x69,  2, |emulator: &mut config::Emulator| -> u32 {
         let value = cpu::read_program_byte(emulator);
@@ -149,6 +150,19 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 21] = [
         let result = asl(emulator, value);
         ram::write_with_addressing_mode(&mut emulator.cpu.memory, &[result], ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
         return 7;
+    }),
+
+    // BCC - Branch if Carry Clear
+    ("BCC - R",  0x90,  2, |emulator: &mut config::Emulator| -> u32 {
+        if emulator.cpu.registers.status.contains(register::Status::C) {
+            let offset = cpu::read_program_byte(emulator) as i8; // signed
+            let page_change = (offset >= 0 && (emulator.cpu.registers.pc as i32 & 0xFF + offset as i32 > 0xFF)) 
+                || (offset < 0 && (offset.abs() > (emulator.cpu.registers.pc & 0xFF).try_into().unwrap()));
+            emulator.cpu.registers.pc = (emulator.cpu.registers.pc as i16 + offset as i16) as u16;
+            return 3 + page_change as u32;
+        }
+        
+        return 2;
     }),
 ];
 
