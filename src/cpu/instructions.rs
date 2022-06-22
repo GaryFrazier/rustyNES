@@ -19,7 +19,7 @@ IX - indirect X
 IY - indirect Y
 R - relative
 */
-pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 23] = [
+pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 24] = [
     // ADC - Add with Carry
     ("ADC - I",  0x69,  2, |emulator: &mut config::Emulator| -> u32 {
         let value = cpu::read_program_byte(emulator);
@@ -154,39 +154,20 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 23] = [
 
     // BCC - Branch if Carry Clear
     ("BCC - R",  0x90,  2, |emulator: &mut config::Emulator| -> u32 {
-        if !emulator.cpu.registers.status.contains(register::Status::C) {
-            let offset = cpu::read_program_byte(emulator) as i8; // signed
-            let (address, page_change) = ram::relative_offset_page_change(emulator.cpu.registers.pc, offset);
-            emulator.cpu.registers.pc = address;
-            return 3 + page_change as u32;
-        }
-        
-        return 2;
+        return relative_branch(emulator, !emulator.cpu.registers.status.contains(register::Status::C));
     }),
     
     // BCC - Branch if Carry Set
     ("BCS - R",  0xB0,  2, |emulator: &mut config::Emulator| -> u32 {
-        if emulator.cpu.registers.status.contains(register::Status::C) {
-            let offset = cpu::read_program_byte(emulator) as i8; // signed
-            let (address, page_change) = ram::relative_offset_page_change(emulator.cpu.registers.pc, offset);
-            emulator.cpu.registers.pc = address;
-            return 3 + page_change as u32;
-        }
-        
-        return 2;
+        return relative_branch(emulator, emulator.cpu.registers.status.contains(register::Status::C));
     }),
 
      // BEQ - Branch if Equal
     ("BEQ - R",  0xF0,  2, |emulator: &mut config::Emulator| -> u32 {
-        if emulator.cpu.registers.status.contains(register::Status::Z) {
-            let offset = cpu::read_program_byte(emulator) as i8; // signed
-            let (address, page_change) = ram::relative_offset_page_change(emulator.cpu.registers.pc, offset);
-            emulator.cpu.registers.pc = address;
-            return 3 + page_change as u32;
-        }
-        
-        return 2;
+        return relative_branch(emulator, emulator.cpu.registers.status.contains(register::Status::Z));
     }),
+
+    
 ];
 
 fn adc(emulator: &mut config::Emulator, value: u8) {
@@ -225,4 +206,16 @@ fn asl(emulator: &mut config::Emulator, value: u8) -> u8 {
     
     // result
     return result;
+}
+
+// returns cycles
+fn relative_branch(emulator: &mut config::Emulator, should_branch: bool) -> u32 {
+    if should_branch {
+        let offset = cpu::read_program_byte(emulator) as i8; // signed
+        let (address, page_change) = ram::relative_offset_page_change(emulator.cpu.registers.pc, offset);
+        emulator.cpu.registers.pc = address;
+        return 3 + page_change as u32;
+    }
+    
+    return 2;
 }

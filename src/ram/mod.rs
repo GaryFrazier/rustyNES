@@ -59,7 +59,7 @@ pub fn read_with_addressing_mode(memory: &mut [u8], addressing_mode: AddressingM
         AddressingMode::IndirectY { address, y } => {
             let indexed_value = read_u16(memory, address.into());
             let calculated_address: u16 = indexed_value + y as u16;
-            value =  read_u8(memory, indexed_value.into());
+            value =  read_u8(memory, calculated_address.into());
             page_cross = calculated_address > 0xFF;
         },
     }
@@ -101,7 +101,7 @@ pub fn write_with_addressing_mode(memory: &mut [u8], data: &[u8], addressing_mod
         AddressingMode::IndirectY { address, y } => {
             let indexed_value = read_u16(memory, address.into());
             let calculated_address: u16 = indexed_value + y as u16;
-            write_block(memory, indexed_value.into(), data);
+            write_block(memory, calculated_address.into(), data);
         },
     }
 }
