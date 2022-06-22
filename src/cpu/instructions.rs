@@ -167,6 +167,50 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 24] = [
         return relative_branch(emulator, emulator.cpu.registers.status.contains(register::Status::Z));
     }),
 
+     // BMI - Branch if Minus
+    ("BMI - R",  0x30,  2, |emulator: &mut config::Emulator| -> u32 {
+        return relative_branch(emulator, emulator.cpu.registers.status.contains(register::Status::N));
+    }),
+
+    // BNE - Branch if Not Equal
+    ("BNE - R",  0xD0,  2, |emulator: &mut config::Emulator| -> u32 {
+        return relative_branch(emulator, !emulator.cpu.registers.status.contains(register::Status::Z));
+    }),
+
+    // BPL - Branch if Positive
+    ("BPL - R",  0x10,  2, |emulator: &mut config::Emulator| -> u32 {
+        return relative_branch(emulator, !emulator.cpu.registers.status.contains(register::Status::N));
+    }),
+
+    // BVC - Branch if Overflow Clear
+    ("BVC - R",  0x50,  2, |emulator: &mut config::Emulator| -> u32 {
+        return relative_branch(emulator, !emulator.cpu.registers.status.contains(register::Status::V));
+    }),
+
+    // BVS - Branch if Overflow Set
+    ("BVC - R",  0x70,  2, |emulator: &mut config::Emulator| -> u32 {
+        return relative_branch(emulator, emulator.cpu.registers.status.contains(register::Status::V));
+    }),
+
+    // BIT - Bit Test
+    ("BIT - Z",  0x24,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::ZeroPage { address });
+        bit_test(emulator, value);
+        return 3;
+    }),
+    ("BIT - A",  0x2C,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::Absolute { address });
+        bit_test(emulator, value);
+        return 4;
+    }),
+
+    // BRK - Force Interrupt
+    ("BRK",  0x00,  1, |emulator: &mut config::Emulator| -> u32 {
+        emulator.cpu.registers.status.set(register::Status::B, 1);
+        return 7;
+    }),
     
 ];
 
@@ -206,6 +250,15 @@ fn asl(emulator: &mut config::Emulator, value: u8) -> u8 {
     
     // result
     return result;
+}
+
+fn bit_test(emulator: &mut config::Emulator, value: u8) {
+    let result = emulator.cpu.registers.a & value; // result not kept
+
+    // flags
+    emulator.cpu.registers.status.set(register::Status::Z, result == 0);
+    emulator.cpu.registers.status.set(register::Status::V, result & 0x40 == 0x40);
+    emulator.cpu.registers.status.set(register::Status::N, result & 0x80 == 0x80);
 }
 
 // returns cycles
