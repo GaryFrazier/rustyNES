@@ -20,7 +20,7 @@ IX - indirect X
 IY - indirect Y
 R - relative
 */
-pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 119] = [
+pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 129] = [
     // ADC - Add with Carry
     ("ADC - I",  0x69,  2, |emulator: &mut config::Emulator| -> u32 {
         let value = cpu::read_program_byte(emulator);
@@ -769,11 +769,88 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 119] = [
         ram::write_with_addressing_mode(&mut emulator.cpu.memory, &[result], ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
         return 7;
     }),
+
+    // RTI - Return From Interrupt
+    ("RTI",  0x40,  1, |emulator: &mut config::Emulator| -> u32 {
+        emulator.cpu.registers.status = register::Status::from_bits(cpu::read_stack_u8(emulator)).unwrap();
+        emulator.cpu.registers.pc = cpu::read_stack_u16(emulator);
+        return 6;
+    }),
+
+    // RTS - Return From Subroutine
+    ("RTS",  0x60,  1, |emulator: &mut config::Emulator| -> u32 {
+        emulator.cpu.registers.pc = cpu::read_stack_u16(emulator);
+        return 6;
+    }),
+
+    // SBC - Subtract with Carry
+    ("SBC - I",  0xE9,  2, |emulator: &mut config::Emulator| -> u32 {
+        let value = cpu::read_program_byte(emulator);
+        sbc(emulator, value);
+        return 2;
+    }),
+    ("SBC - Z",  0xE5,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::ZeroPage { address });
+        sbc(emulator, value);
+        return 3;
+    }),
+    ("SBC - ZX",  0xF5,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        sbc(emulator, value);
+        return 4;
+    }),
+    ("SBC - A",  0xED,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::Absolute { address });
+        sbc(emulator, value);
+        return 4;
+    }),
+    ("SBC - AX",  0xFD,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, add_cycle) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        sbc(emulator, value);
+        return 4 + add_cycle as u32;
+    }),
+    ("SBC - AY",  0xF9,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, add_cycle) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::AbsoluteY { address, y: emulator.cpu.registers.y });
+        sbc(emulator, value);
+        return 4 + add_cycle as u32;
+    }),
+    ("SBC - IX",  0xE1,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::IndirectX { address, x: emulator.cpu.registers.x });
+        sbc(emulator, value);
+        return 6;
+    }),
+    ("SBC - IY",  0xF1,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, add_cycle) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::IndirectY { address, y: emulator.cpu.registers.y });
+        sbc(emulator, value);
+        return 5 + add_cycle as u32;
+    }),
 ];
 
 fn adc(emulator: &mut config::Emulator, value: u8) {
     let total: u16 = emulator.cpu.registers.a as u16 
         + value as u16
+        + emulator.cpu.registers.status.contains(register::Status::C) as u16;
+
+    // flags
+    emulator.cpu.registers.status.set(register::Status::C, total > 0xFF);
+    emulator.cpu.registers.status.set(register::Status::Z, total & 0xFF == 0);
+    emulator.cpu.registers.status.set(register::Status::V, (emulator.cpu.registers.a as u16 ^ total) & (value as u16 ^ total) & 0x80 == 0x80); // if pos + pos = neg or neg + neg = pos, explanations here https://forums.nesdev.org/viewtopic.php?t=6331
+    emulator.cpu.registers.status.set(register::Status::N, total & 0x80 == 0x80);
+    
+    // registers
+    emulator.cpu.registers.a = (total & 0xFF) as u8;
+}
+
+fn sbc(emulator: &mut config::Emulator, value: u8) {
+    let total: u16 = emulator.cpu.registers.a as u16 
+        + (value as u16 ^ 0x00FF) // convert to negative to make this addition easier
         + emulator.cpu.registers.status.contains(register::Status::C) as u16;
 
     // flags
