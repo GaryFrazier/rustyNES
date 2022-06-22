@@ -19,7 +19,7 @@ IX - indirect X
 IY - indirect Y
 R - relative
 */
-pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 22] = [
+pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 23] = [
     // ADC - Add with Carry
     ("ADC - I",  0x69,  2, |emulator: &mut config::Emulator| -> u32 {
         let value = cpu::read_program_byte(emulator);
@@ -154,11 +154,34 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 22] = [
 
     // BCC - Branch if Carry Clear
     ("BCC - R",  0x90,  2, |emulator: &mut config::Emulator| -> u32 {
+        if !emulator.cpu.registers.status.contains(register::Status::C) {
+            let offset = cpu::read_program_byte(emulator) as i8; // signed
+            let (address, page_change) = ram::relative_offset_page_change(emulator.cpu.registers.pc, offset);
+            emulator.cpu.registers.pc = address;
+            return 3 + page_change as u32;
+        }
+        
+        return 2;
+    }),
+    
+    // BCC - Branch if Carry Set
+    ("BCS - R",  0xB0,  2, |emulator: &mut config::Emulator| -> u32 {
         if emulator.cpu.registers.status.contains(register::Status::C) {
             let offset = cpu::read_program_byte(emulator) as i8; // signed
-            let page_change = (offset >= 0 && (emulator.cpu.registers.pc as i32 & 0xFF + offset as i32 > 0xFF)) 
-                || (offset < 0 && (offset.abs() > (emulator.cpu.registers.pc & 0xFF).try_into().unwrap()));
-            emulator.cpu.registers.pc = (emulator.cpu.registers.pc as i16 + offset as i16) as u16;
+            let (address, page_change) = ram::relative_offset_page_change(emulator.cpu.registers.pc, offset);
+            emulator.cpu.registers.pc = address;
+            return 3 + page_change as u32;
+        }
+        
+        return 2;
+    }),
+
+     // BEQ - Branch if Equal
+    ("BEQ - R",  0xF0,  2, |emulator: &mut config::Emulator| -> u32 {
+        if emulator.cpu.registers.status.contains(register::Status::Z) {
+            let offset = cpu::read_program_byte(emulator) as i8; // signed
+            let (address, page_change) = ram::relative_offset_page_change(emulator.cpu.registers.pc, offset);
+            emulator.cpu.registers.pc = address;
             return 3 + page_change as u32;
         }
         

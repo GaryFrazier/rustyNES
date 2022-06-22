@@ -19,6 +19,6 @@ fn boot(file_name: String) {
     };
 
     rom::init_mapper(&mut emulator);
-    //cpu::run_cycle(&mut emulator);
+    cpu::run_cycle(&mut emulator);
     println!("{}", emulator);
 }
