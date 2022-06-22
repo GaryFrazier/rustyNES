@@ -19,7 +19,7 @@ IX - indirect X
 IY - indirect Y
 R - relative
 */
-pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 24] = [
+pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 33] = [
     // ADC - Add with Carry
     ("ADC - I",  0x69,  2, |emulator: &mut config::Emulator| -> u32 {
         let value = cpu::read_program_byte(emulator);
@@ -208,10 +208,33 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 24] = [
 
     // BRK - Force Interrupt
     ("BRK",  0x00,  1, |emulator: &mut config::Emulator| -> u32 {
-        emulator.cpu.registers.status.set(register::Status::B, 1);
+        emulator.cpu.registers.status.set(register::Status::B, true);
         return 7;
     }),
     
+    // CLC - Clear Carry Flag
+    ("CLC",  0x18,  1, |emulator: &mut config::Emulator| -> u32 {
+        emulator.cpu.registers.status.set(register::Status::C, false);
+        return 2;
+    }),
+
+    // CLD - Clear Decimal Mode
+    ("CLD",  0xD8,  1, |emulator: &mut config::Emulator| -> u32 {
+        emulator.cpu.registers.status.set(register::Status::D, false);
+        return 2;
+    }),
+
+    // CLI - Clear Interrupt Disable
+    ("CLI",  0x58,  1, |emulator: &mut config::Emulator| -> u32 {
+        emulator.cpu.registers.status.set(register::Status::I, false);
+        return 2;
+    }),
+
+    // CLV - Clear Overflow Flag
+    ("CLV",  0xB8,  1, |emulator: &mut config::Emulator| -> u32 {
+        emulator.cpu.registers.status.set(register::Status::V, false);
+        return 2;
+    }),
 ];
 
 fn adc(emulator: &mut config::Emulator, value: u8) {
