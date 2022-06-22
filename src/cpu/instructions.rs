@@ -68,7 +68,53 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 8] = [
     }),
 
     // AND - Logical AND
-
+    ("AND - I",  0x29,  2, |emulator: &mut config::Emulator| -> u32 {
+        let value = cpu::read_program_byte(emulator);
+        adc(emulator, value);
+        return 2;
+    }),
+    ("AND - Z",  0x25,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::ZeroPage { address });
+        adc(emulator, value);
+        return 3;
+    }),
+    ("AND - ZX",  0x35,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        adc(emulator, value);
+        return 4;
+    }),
+    ("AND - A",  0x2D,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::Absolute { address });
+        adc(emulator, value);
+        return 4;
+    }),
+    ("AND - AX",  0x3D,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, add_cycle) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        adc(emulator, value);
+        return 4 + add_cycle as u32;
+    }),
+    ("AND - AY",  0x39,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, add_cycle) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::AbsoluteY { address, y: emulator.cpu.registers.y });
+        adc(emulator, value);
+        return 4 + add_cycle as u32;
+    }),
+    ("AND - IX",  0x21,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::IndirectX { address, x: emulator.cpu.registers.x });
+        adc(emulator, value);
+        return 6;
+    }),
+    ("AND - IY",  0x31,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, add_cycle) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::IndirectY { address, y: emulator.cpu.registers.y });
+        adc(emulator, value);
+        return 5 + add_cycle as u32;
+    }),
 
 ];
 
@@ -85,4 +131,15 @@ fn adc(emulator: &mut config::Emulator, value: u8) {
     
     // registers
     emulator.cpu.registers.a = (total & 0xFF) as u8;
+}
+
+fn and(emulator: &mut config::Emulator, value: u8) {
+    let result = emulator.cpu.registers.a & value;
+
+    // flags
+    emulator.cpu.registers.status.set(register::Status::Z, result == 0);
+    emulator.cpu.registers.status.set(register::Status::N, total & 0x80 == 0x80);
+    
+    // registers
+    emulator.cpu.registers.a = result;
 }
