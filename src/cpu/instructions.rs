@@ -322,6 +322,48 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 33] = [
         cpx(emulator, value);
         return 4;
     }),
+
+    // DEC - Decrement Memory
+    ("DEC - Z",  0xC6,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::ZeroPage { address });
+        let result = dec(emulator, value);
+        ram::write_with_addressing_mode(&mut emulator.cpu.memory, &[result], ram::AddressingMode::ZeroPage { address });
+        return 5;
+    }),
+    ("DEC - ZX",  0xD6,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        let result = dec(emulator, value);
+        ram::write_with_addressing_mode(&mut emulator.cpu.memory, &[result], ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        return 6;
+    }),
+    ("DEC - A",  0xCE,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::Absolute { address });
+        let result = dec(emulator, value);
+        ram::write_with_addressing_mode(&mut emulator.cpu.memory, &[result], ram::AddressingMode::Absolute { address });
+        return 6;
+    }),
+    ("DEC - AX",  0xDE,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        let result = dec(emulator, value);
+        ram::write_with_addressing_mode(&mut emulator.cpu.memory, &[result], ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        return 7;
+    }),
+
+    //DEX - Decrement X Register
+    ("DEX",  0xCA,  1, |emulator: &mut config::Emulator| -> u32 {
+        emulator.cpu.registers.x = dec(emulator, emulator.cpu.registers.x);
+        return 2;
+    }),
+
+    //DEY - Decrement Y Register
+    ("DEY",  0x88,  1, |emulator: &mut config::Emulator| -> u32 {
+        emulator.cpu.registers.y = dec(emulator, emulator.cpu.registers.y);
+        return 2;
+    }),
 ];
 
 fn adc(emulator: &mut config::Emulator, value: u8) {
@@ -408,4 +450,16 @@ fn cpy(emulator: &mut config::Emulator, value: u8) {
     emulator.cpu.registers.status.set(register::Status::C, result >= 0);
     emulator.cpu.registers.status.set(register::Status::Z, result == 0);
     emulator.cpu.registers.status.set(register::Status::N, result < 0);
+}
+
+fn dec(emulator: &mut config::Emulator, value: u8) -> u8 {
+    let signedValue = value as i8;
+    let result: i8 = signedValue - 1;
+
+    // flags
+    emulator.cpu.registers.status.set(register::Status::Z, result == 0);
+    emulator.cpu.registers.status.set(register::Status::N, result < 0);
+    
+    // result
+    return result as u8;
 }
