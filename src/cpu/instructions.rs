@@ -20,7 +20,7 @@ IX - indirect X
 IY - indirect Y
 R - relative
 */
-pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 97] = [
+pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 106] = [
     // ADC - Add with Carry
     ("ADC - I",  0x69,  2, |emulator: &mut config::Emulator| -> u32 {
         let value = cpu::read_program_byte(emulator);
@@ -626,6 +626,61 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 97] = [
     ("NOP",  0xEA,  1, |_: &mut config::Emulator| -> u32 {
         return 2;
     }),
+
+    // ORA - Inclusive OR
+    ("ORA - I",  0x09,  2, |emulator: &mut config::Emulator| -> u32 {
+        let value = cpu::read_program_byte(emulator);
+        ora(emulator, value);
+        return 2;
+    }),
+    ("ORA - Z",  0x05,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::ZeroPage { address });
+        ora(emulator, value);
+        return 3;
+    }),
+    ("ORA - ZX",  0x15,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        ora(emulator, value);
+        return 4;
+    }),
+    ("ORA - A",  0x0D,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::Absolute { address });
+        ora(emulator, value);
+        return 4;
+    }),
+    ("ORA - AX",  0x1D,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, add_cycle) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        eor(emulator, value);
+        return 4 + add_cycle as u32;
+    }),
+    ("ORA - AY",  0x19,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, add_cycle) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::AbsoluteY { address, y: emulator.cpu.registers.y });
+        ora(emulator, value);
+        return 4 + add_cycle as u32;
+    }),
+    ("ORA - IX",  0x01,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::IndirectX { address, x: emulator.cpu.registers.x });
+        ora(emulator, value);
+        return 6;
+    }),
+    ("ORA - IY",  0x11,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, add_cycle) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::IndirectY { address, y: emulator.cpu.registers.y });
+        ora(emulator, value);
+        return 5 + add_cycle as u32;
+    }),
+
+    // PHA - Push Accumulator
+    ("PHA",  0x48,  1, |emulator: &mut config::Emulator| -> u32 {
+        cpu::write_stack_u8(emulator, emulator.cpu.registers.a);
+        return 3;
+    }),
 ];
 
 fn adc(emulator: &mut config::Emulator, value: u8) {
@@ -656,6 +711,17 @@ fn and(emulator: &mut config::Emulator, value: u8) {
 
 fn eor(emulator: &mut config::Emulator, value: u8) {
     let result = emulator.cpu.registers.a ^ value;
+
+    // flags
+    emulator.cpu.registers.status.set(register::Status::Z, result == 0);
+    emulator.cpu.registers.status.set(register::Status::N, result & 0x80 == 0x80);
+    
+    // registers
+    emulator.cpu.registers.a = result;
+}
+
+fn ora(emulator: &mut config::Emulator, value: u8) {
+    let result = emulator.cpu.registers.a | value;
 
     // flags
     emulator.cpu.registers.status.set(register::Status::Z, result == 0);
