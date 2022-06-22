@@ -75,3 +75,33 @@ pub fn write_block(memory: &mut [u8], address: usize, data: &[u8]) {
         i += 1;
     }
 }
+
+pub fn write_with_addressing_mode(memory: &mut [u8], data: &[u8], addressing_mode: AddressingMode) {
+    match addressing_mode {
+        AddressingMode::ZeroPage { address } => {
+            write_block(memory, address.into(), data);
+        },
+        AddressingMode::ZeroPageX { address, x } => {
+            write_block(memory, ((address as u16 + x as u16) & 0xFF).into(), data);
+        },
+        AddressingMode::Absolute { address } => {
+            write_block(memory, address.into(), data);
+        },
+        AddressingMode::AbsoluteX { address, x } => {
+            write_block(memory, (address + x as u16).into(), data);
+        },
+        AddressingMode::AbsoluteY { address, y } => {
+            write_block(memory, (address + y as u16).into(), data);
+        },
+        AddressingMode::IndirectX { address, x } => {
+            let calculated_address: u16 = address as u16 + x as u16;
+            let indexed_value = read_u16(memory, calculated_address.into());
+            write_block(memory, indexed_value.into(), data);
+        },
+        AddressingMode::IndirectY { address, y } => {
+            let indexed_value = read_u16(memory, address.into());
+            let calculated_address: u16 = indexed_value + y as u16;
+            write_block(memory, indexed_value.into(), data);
+        },
+    }
+}
