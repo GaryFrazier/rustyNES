@@ -20,7 +20,7 @@ IX - indirect X
 IY - indirect Y
 R - relative
 */
-pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 109] = [
+pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 119] = [
     // ADC - Add with Carry
     ("ADC - I",  0x69,  2, |emulator: &mut config::Emulator| -> u32 {
         let value = cpu::read_program_byte(emulator);
@@ -701,6 +701,74 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 109] = [
         emulator.cpu.registers.status = register::Status::from_bits(cpu::read_stack_u8(emulator)).unwrap();
         return 4;
     }),
+
+    // ROL - Rotate Left
+    ("ROL - A",  0x2A,  1, |emulator: &mut config::Emulator| -> u32 {
+        emulator.cpu.registers.a = rol(emulator, emulator.cpu.registers.a);
+        return 2;
+    }),
+    ("ROL - Z",  0x26,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::ZeroPage { address });
+        let result = rol(emulator, value);
+        ram::write_with_addressing_mode(&mut emulator.cpu.memory, &[result], ram::AddressingMode::ZeroPage { address });
+        return 5;
+    }),
+    ("ROL - ZX",  0x36,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        let result = rol(emulator, value);
+        ram::write_with_addressing_mode(&mut emulator.cpu.memory, &[result], ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        return 6;
+    }),
+    ("ROL - A",  0x2E,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::Absolute { address });
+        let result = rol(emulator, value);
+        ram::write_with_addressing_mode(&mut emulator.cpu.memory, &[result], ram::AddressingMode::Absolute { address });
+        return 6;
+    }),
+    ("ROL - AX",  0x3E,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        let result = rol(emulator, value);
+        ram::write_with_addressing_mode(&mut emulator.cpu.memory, &[result], ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        return 7;
+    }),
+
+    // ROR - Rotate Right
+    ("ROR - A",  0x6A,  1, |emulator: &mut config::Emulator| -> u32 {
+        emulator.cpu.registers.a = ror(emulator, emulator.cpu.registers.a);
+        return 2;
+    }),
+    ("ROR - Z",  0x66,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::ZeroPage { address });
+        let result = ror(emulator, value);
+        ram::write_with_addressing_mode(&mut emulator.cpu.memory, &[result], ram::AddressingMode::ZeroPage { address });
+        return 5;
+    }),
+    ("ROR - ZX",  0x76,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        let result = ror(emulator, value);
+        ram::write_with_addressing_mode(&mut emulator.cpu.memory, &[result], ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        return 6;
+    }),
+    ("ROR - A",  0x6E,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::Absolute { address });
+        let result = ror(emulator, value);
+        ram::write_with_addressing_mode(&mut emulator.cpu.memory, &[result], ram::AddressingMode::Absolute { address });
+        return 6;
+    }),
+    ("ROR - AX",  0x7E,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        let result = ror(emulator, value);
+        ram::write_with_addressing_mode(&mut emulator.cpu.memory, &[result], ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        return 7;
+    }),
 ];
 
 fn adc(emulator: &mut config::Emulator, value: u8) {
@@ -768,6 +836,32 @@ fn lsr(emulator: &mut config::Emulator, value: u8) -> u8 {
 
     // flags
     emulator.cpu.registers.status.set(register::Status::C, value & 0x1 == 0x1);
+    emulator.cpu.registers.status.set(register::Status::Z, result == 0);
+    emulator.cpu.registers.status.set(register::Status::N, result & 0x80 == 0x80);
+    
+    // result
+    return result;
+}
+
+fn rol(emulator: &mut config::Emulator, value: u8) -> u8 {
+    let carry: bool = value & 0x80 == 0x80;
+    let result: u8 = (value << 1) | (emulator.cpu.registers.status.contains(register::Status::C) as u8 & 0x1);
+
+    // flags
+    emulator.cpu.registers.status.set(register::Status::C, carry);
+    emulator.cpu.registers.status.set(register::Status::Z, result == 0);
+    emulator.cpu.registers.status.set(register::Status::N, result & 0x80 == 0x80);
+    
+    // result
+    return result;
+}
+
+fn ror(emulator: &mut config::Emulator, value: u8) -> u8 {
+    let carry: bool = value & 0x1 == 0x1;
+    let result: u8 = (value >> 1) | ((emulator.cpu.registers.status.contains(register::Status::C) as u8 & 0x1) << 7);
+
+    // flags
+    emulator.cpu.registers.status.set(register::Status::C, carry);
     emulator.cpu.registers.status.set(register::Status::Z, result == 0);
     emulator.cpu.registers.status.set(register::Status::N, result & 0x80 == 0x80);
     
