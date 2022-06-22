@@ -413,6 +413,68 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 33] = [
         eor(emulator, value);
         return 5 + add_cycle as u32;
     }),
+
+    // INC - Increment Memory
+    ("INC - Z",  0xE6,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::ZeroPage { address });
+        let result = inc(emulator, value);
+        ram::write_with_addressing_mode(&mut emulator.cpu.memory, &[result], ram::AddressingMode::ZeroPage { address });
+        return 5;
+    }),
+    ("INC - ZX",  0xF6,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        let result = inc(emulator, value);
+        ram::write_with_addressing_mode(&mut emulator.cpu.memory, &[result], ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        return 6;
+    }),
+    ("INC - A",  0xEE,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::Absolute { address });
+        let result = inc(emulator, value);
+        ram::write_with_addressing_mode(&mut emulator.cpu.memory, &[result], ram::AddressingMode::Absolute { address });
+        return 6;
+    }),
+    ("INC - AX",  0xFE,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        let result = inc(emulator, value);
+        ram::write_with_addressing_mode(&mut emulator.cpu.memory, &[result], ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        return 7;
+    }),
+
+    //INC - Decrement X Register
+    ("INC",  0xE8,  1, |emulator: &mut config::Emulator| -> u32 {
+        emulator.cpu.registers.x = inc(emulator, emulator.cpu.registers.x);
+        return 2;
+    }),
+
+    //INC - Decrement Y Register
+    ("INC",  0xC8,  1, |emulator: &mut config::Emulator| -> u32 {
+        emulator.cpu.registers.y = inc(emulator, emulator.cpu.registers.y);
+        return 2;
+    }),
+
+    // JMP - Jump
+    ("JMP - A",  0x4C,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        jmp(emulator, address);
+        return 3;
+    }),
+    ("JMP - Indirect",  0x6C,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let value = ram::read_u16(&mut emulator.cpu.memory, address.into());
+        jmp(emulator, value);
+        return 5;
+    }),
+
+    // JSR - Jump to Subroutine
+    ("JSR - A",  0x20,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        jsr(emulator, address);
+        return 6;
+    }),
 ];
 
 fn adc(emulator: &mut config::Emulator, value: u8) {
@@ -533,4 +595,14 @@ fn inc(emulator: &mut config::Emulator, value: u8) -> u8 {
     
     // result
     return result;
+}
+
+fn jmp(emulator: &mut config::Emulator, address: u16) {
+    emulator.cpu.registers.pc = address;
+}
+
+fn jsr(emulator: &mut config::Emulator, address: u16) {
+    emulator.cpu.registers.pc -= 1;
+    cpu::write_stack_u16(emulator, emulator.cpu.registers.pc);
+    jmp(emulator, address);
 }

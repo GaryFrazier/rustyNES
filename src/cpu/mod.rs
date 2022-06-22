@@ -11,7 +11,7 @@ use crate::ram;
     Memory map of the 6502 is as follows, see https://www.nesdev.org/wiki/CPU_memory_map for more info:
     $0000-$07FF	$0800	2KB internal RAM
     $0800-$0FFF	$0800	Mirrors of $0000-$07FF
-    $1000-$17FF	$0800
+    $1000-$17FF	$0800 
     $1800-$1FFF	$0800
     $2000-$2007	$0008	NES PPU registers
     $2008-$3FFF	$1FF8	Mirrors of $2000-2007 (repeats every 8 bytes)
@@ -81,4 +81,9 @@ fn run_next_instruction(emulator: &mut config::Emulator) {
 // executes the given instruction on the emulator, returns number of cycles it took to complete
 fn execute_instruction(emulator: &mut config::Emulator, instruction: (&str, u8, i32, fn(&mut config::Emulator) -> u32)) -> u32 {
     return instruction.3(emulator);
+}
+
+fn write_stack_u16(emulator: &mut config::Emulator, value: u16) {
+    ram::write_block(&mut emulator.cpu.memory, (0x0100 + emulator.cpu.registers.sp - 1).into(), &value.to_le_bytes());
+	emulator.cpu.registers.sp -= 2;
 }
