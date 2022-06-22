@@ -2,6 +2,7 @@
 pub enum AddressingMode {
     ZeroPage { address: u8},
     ZeroPageX { address: u8, x: u8 },
+    ZeroPageY { address: u8, y: u8 },
     Absolute { address: u16 },
     AbsoluteX { address: u16, x: u8 },
     AbsoluteY { address: u16, y: u8 },
@@ -36,6 +37,10 @@ pub fn read_with_addressing_mode(memory: &mut [u8], addressing_mode: AddressingM
         },
         AddressingMode::ZeroPageX { address, x } => {
             value = read_u8(memory, ((address as u16 + x as u16) & 0xFF).into());
+            page_cross = false;
+        },
+        AddressingMode::ZeroPageY { address, y } => {
+            value = read_u8(memory, ((address as u16 + y as u16) & 0xFF).into());
             page_cross = false;
         },
         AddressingMode::Absolute { address } => {
