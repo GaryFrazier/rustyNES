@@ -235,6 +235,93 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 33] = [
         emulator.cpu.registers.status.set(register::Status::V, false);
         return 2;
     }),
+
+    // CMP - Compare
+    ("CMP - I",  0xC9,  2, |emulator: &mut config::Emulator| -> u32 {
+        let value = cpu::read_program_byte(emulator);
+        cmp(emulator, value);
+        return 2;
+    }),
+    ("CMP - Z",  0xC5,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::ZeroPage { address });
+        cmp(emulator, value);
+        return 3;
+    }),
+    ("CMP - ZX",  0xD5,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        cmp(emulator, value);
+        return 4;
+    }),
+    ("CMP - A",  0xCD,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::Absolute { address });
+        cmp(emulator, value);
+        return 4;
+    }),
+    ("CMP - AX",  0xDD,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, add_cycle) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        cmp(emulator, value);
+        return 4 + add_cycle as u32;
+    }),
+    ("CMP - AY",  0xD9,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, add_cycle) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::AbsoluteY { address, y: emulator.cpu.registers.y });
+        cmp(emulator, value);
+        return 4 + add_cycle as u32;
+    }),
+    ("CMP - IX",  0xC1,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::IndirectX { address, x: emulator.cpu.registers.x });
+        cmp(emulator, value);
+        return 6;
+    }),
+    ("CMP - IY",  0xD1,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, add_cycle) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::IndirectY { address, y: emulator.cpu.registers.y });
+        cmp(emulator, value);
+        return 5 + add_cycle as u32;
+    }),
+
+    // CPX - Compare X Register
+    ("CPX - I",  0xE0,  2, |emulator: &mut config::Emulator| -> u32 {
+        let value = cpu::read_program_byte(emulator);
+        cpx(emulator, value);
+        return 2;
+    }),
+    ("CPX - Z",  0xE4,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::ZeroPage { address });
+        cpx(emulator, value);
+        return 3;
+    }),
+    ("CPX - A",  0xEC,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::Absolute { address });
+        cpx(emulator, value);
+        return 4;
+    }),
+
+    // CPY - Compare Y Register
+    ("CPY - I",  0xC0,  2, |emulator: &mut config::Emulator| -> u32 {
+        let value = cpu::read_program_byte(emulator);
+        cpx(emulator, value);
+        return 2;
+    }),
+    ("CPY - Z",  0xC4,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::ZeroPage { address });
+        cpx(emulator, value);
+        return 3;
+    }),
+    ("CPY - A",  0xCC,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let (value, _) = ram::read_with_addressing_mode(&mut emulator.cpu.memory, ram::AddressingMode::Absolute { address });
+        cpx(emulator, value);
+        return 4;
+    }),
 ];
 
 fn adc(emulator: &mut config::Emulator, value: u8) {
@@ -294,4 +381,31 @@ fn relative_branch(emulator: &mut config::Emulator, should_branch: bool) -> u32 
     }
     
     return 2;
+}
+
+fn cmp(emulator: &mut config::Emulator, value: u8) {
+    let result = emulator.cpu.registers.a as i16 - value as i16;
+
+    // flags
+    emulator.cpu.registers.status.set(register::Status::C, result >= 0);
+    emulator.cpu.registers.status.set(register::Status::Z, result == 0);
+    emulator.cpu.registers.status.set(register::Status::N, result < 0);
+}
+
+fn cpx(emulator: &mut config::Emulator, value: u8) {
+    let result = emulator.cpu.registers.x as i16 - value as i16;
+
+    // flags
+    emulator.cpu.registers.status.set(register::Status::C, result >= 0);
+    emulator.cpu.registers.status.set(register::Status::Z, result == 0);
+    emulator.cpu.registers.status.set(register::Status::N, result < 0);
+}
+
+fn cpy(emulator: &mut config::Emulator, value: u8) {
+    let result = emulator.cpu.registers.y as i16 - value as i16;
+
+    // flags
+    emulator.cpu.registers.status.set(register::Status::C, result >= 0);
+    emulator.cpu.registers.status.set(register::Status::Z, result == 0);
+    emulator.cpu.registers.status.set(register::Status::N, result < 0);
 }
