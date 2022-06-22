@@ -2,6 +2,7 @@ mod config;
 mod cpu;
 mod ram;
 mod rom;
+mod ppu;
 use std::env;
 
 fn main() {

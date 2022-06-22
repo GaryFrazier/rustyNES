@@ -5,7 +5,6 @@ use crate::ram;
 // format is (mapper number, initialize function)
 pub static MAPPERS: [(u8, fn(&mut config::Emulator)); 1] = [
     (0, |emulator: &mut config::Emulator| {
-        //TODO: MAP TO PPU
         if emulator.rom.header.prg_rom_length == 1 {
             // NROM-128
             ram::write_block(&mut emulator.cpu.memory, 0x8000, &emulator.rom.prg_rom);
@@ -14,5 +13,7 @@ pub static MAPPERS: [(u8, fn(&mut config::Emulator)); 1] = [
             // NROM-256
             ram::write_block(&mut emulator.cpu.memory, 0x8000, &emulator.rom.prg_rom);
         }
+
+        ram::write_block(&mut emulator.ppu.memory, 0x0000, &emulator.rom.chr_rom);
     })
 ];

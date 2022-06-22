@@ -1,11 +1,13 @@
 use crate::cpu;
 use crate::rom;
+use crate::ppu;
 use std::fmt;
 
 #[derive(Default)]
 pub struct Emulator {
     pub cpu: cpu::CPU,
-    pub rom: rom::ROM
+    pub rom: rom::ROM,
+    pub ppu: ppu::PPU,
 }
 
 impl fmt::Display for Emulator {
