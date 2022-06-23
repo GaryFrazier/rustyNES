@@ -20,7 +20,7 @@ IX - indirect X
 IY - indirect Y
 R - relative
 */
-pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 145] = [
+pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 151] = [
     // ADC - Add with Carry
     ("ADC - I",  0x69,  2, |emulator: &mut config::Emulator| -> u32 {
         let value = cpu::read_program_byte(emulator);
@@ -919,6 +919,52 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 145] = [
         let address = cpu::read_program_word(emulator);
         ram::write_with_addressing_mode(&mut emulator.cpu.memory, &[emulator.cpu.registers.y], ram::AddressingMode::Absolute { address });
         return 4;
+    }),
+
+    // TAX - Transfer Accumulator to X
+    ("TAX",  0xAA,  1, |emulator: &mut config::Emulator| -> u32 {
+        emulator.cpu.registers.x = emulator.cpu.registers.a;
+        emulator.cpu.registers.status.set(register::Status::Z, emulator.cpu.registers.x == 0);
+        emulator.cpu.registers.status.set(register::Status::N, emulator.cpu.registers.x & 0x80 == 0x80);
+        return 2;
+    }),
+
+    // TAY - Transfer Accumulator to Y
+    ("TAY",  0xA8,  1, |emulator: &mut config::Emulator| -> u32 {
+        emulator.cpu.registers.y = emulator.cpu.registers.a;
+        emulator.cpu.registers.status.set(register::Status::Z, emulator.cpu.registers.y == 0);
+        emulator.cpu.registers.status.set(register::Status::N, emulator.cpu.registers.y & 0x80 == 0x80);
+        return 2;
+    }),
+
+    // TSX - Transfer Stack Pointer to X
+    ("TSX",  0xBA,  1, |emulator: &mut config::Emulator| -> u32 {
+        emulator.cpu.registers.x = emulator.cpu.registers.sp;
+        emulator.cpu.registers.status.set(register::Status::Z, emulator.cpu.registers.x == 0);
+        emulator.cpu.registers.status.set(register::Status::N, emulator.cpu.registers.x & 0x80 == 0x80);
+        return 2;
+    }),
+
+    // TXA - Transfer X to Accumulator
+    ("TXA",  0x8A,  1, |emulator: &mut config::Emulator| -> u32 {
+        emulator.cpu.registers.a = emulator.cpu.registers.x;
+        emulator.cpu.registers.status.set(register::Status::Z, emulator.cpu.registers.a == 0);
+        emulator.cpu.registers.status.set(register::Status::N, emulator.cpu.registers.a & 0x80 == 0x80);
+        return 2;
+    }),
+
+    // TXS - Transfer X to Stack Pointer
+    ("TSX",  0x9A,  1, |emulator: &mut config::Emulator| -> u32 {
+        emulator.cpu.registers.sp = emulator.cpu.registers.x;
+        return 2;
+    }),
+
+    // TYA - Transfer Y to Accumulator
+    ("TYA",  0x98,  1, |emulator: &mut config::Emulator| -> u32 {
+        emulator.cpu.registers.a = emulator.cpu.registers.y;
+        emulator.cpu.registers.status.set(register::Status::Z, emulator.cpu.registers.a == 0);
+        emulator.cpu.registers.status.set(register::Status::N, emulator.cpu.registers.a & 0x80 == 0x80);
+        return 2;
     }),
 ];
 
