@@ -8,6 +8,7 @@ pub struct Emulator {
     pub cpu: cpu::CPU,
     pub rom: rom::ROM,
     pub ppu: ppu::PPU,
+    pub shut_down: bool,
 }
 
 impl fmt::Display for Emulator {

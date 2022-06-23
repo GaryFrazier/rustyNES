@@ -24,7 +24,6 @@ pub struct CPU {
     pub registers: register::Registers,
     pub memory: [u8; 0xffff],
     pub cycle: u32,
-    pub wait_cycles: u32
 }
 
 impl Default for CPU {
@@ -33,25 +32,22 @@ impl Default for CPU {
             registers: register::Registers {..Default::default()},
             memory: [0; 0xffff],
             cycle: 0,
-            wait_cycles: 0,
         }
     }
 }
 
 impl fmt::Display for CPU {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "registers: {}\n\tcycle: {}\n\twait_cycles: {}", self.registers, self.cycle, self.wait_cycles)
+        write!(f, "registers: {}\n\tcycle: {}", self.registers, self.cycle)
     }
 }
 
-// runs one clock cycle on the cpu, if the previous instruction took longer than a cycle
-// it sets the wait_cycles property, and this fn will do nothing untill the wait_cycles is decremented to 0
-pub fn run_cycle(emulator: &mut config::Emulator) {
-    if emulator.cpu.wait_cycles == 0 {
+// only runs if it is below the target cycle in order to maintain timing
+pub fn run_cycle(emulator: &mut config::Emulator, target_cycle: u32) {
+    if emulator.cpu.cycle < target_cycle {
         run_next_instruction(emulator);
+        println!("{}", emulator);
     }
-
-    emulator.cpu.wait_cycles -= 1;
 }
 
 // reads next byte in program, increments program counter
@@ -75,7 +71,7 @@ fn run_next_instruction(emulator: &mut config::Emulator) {
     let mut opcode_iterator = instructions::OPCODES.iter();
 
     // we unwrap the find here so it crashes if the opcode is invalid, for now
-    emulator.cpu.wait_cycles = execute_instruction(emulator, *opcode_iterator.find(|&x| x.1 == opcode).unwrap());
+    emulator.cpu.cycle += execute_instruction(emulator, *opcode_iterator.find(|&x| x.1 == opcode).unwrap());
 }
 
 // executes the given instruction on the emulator, returns number of cycles it took to complete
@@ -103,4 +99,22 @@ fn write_stack_u8(emulator: &mut config::Emulator, value: u8) {
 fn write_stack_u16(emulator: &mut config::Emulator, value: u16) {
     ram::write_block(&mut emulator.cpu.memory, (0x0100 + emulator.cpu.registers.sp as u16 - 1).into(), &value.to_le_bytes());
 	emulator.cpu.registers.sp -= 2;
+}
+
+pub fn power_up(emulator: &mut config::Emulator) {
+    emulator.cpu.registers.pc = 0x34;
+    emulator.cpu.registers.sp = 0xFD;
+    emulator.cpu.registers.a = 0;
+    emulator.cpu.registers.x = 0;
+    emulator.cpu.registers.y = 0;
+
+    let null_mem = [0; 0x1];
+    ram::write_block(&mut emulator.cpu.memory, 0x4017, &null_mem);
+    ram::write_block(&mut emulator.cpu.memory, 0x4015, &null_mem);
+
+    let null_mem = [0; 0xF];
+    ram::write_block(&mut emulator.cpu.memory, 0x4000, &null_mem);
+
+    let null_mem = [0; 0x3];
+    ram::write_block(&mut emulator.cpu.memory, 0x4010, &null_mem);
 }
