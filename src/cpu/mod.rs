@@ -89,6 +89,13 @@ fn run_next_instruction(emulator: &mut config::Emulator) {
 
     // we unwrap the find here so it crashes if the opcode is invalid, for now
     println!("{}", opcode);
+
+    // for nestest
+    let error_code = ram::read_u8(&mut emulator.cpu.memory, 0x2);
+    if error_code > 0 {
+        println!("error {}", ram::read_u8(&mut emulator.cpu.memory, 0x2)); 
+    }
+    
     emulator.cpu.cycle += execute_instruction(emulator, *opcode_iterator.find(|&x| x.1 == opcode).unwrap());
 }
 
@@ -140,7 +147,7 @@ fn write_stack_u16(emulator: &mut config::Emulator, value: u16) {
 }*/
 
 pub fn reset(emulator: &mut config::Emulator) {
-    emulator.cpu.registers.pc = ram::read_u16(&mut emulator.cpu.memory, 0xFFFC); // 0xFFFC is the reset vector
+    emulator.cpu.registers.pc = 0xC000; //ram::read_u16(&mut emulator.cpu.memory, 0xFFFC); // 0xFFFC is the reset vector
     emulator.cpu.registers.sp = 0xFD;
     emulator.cpu.registers.a = 0;
     emulator.cpu.registers.x = 0;

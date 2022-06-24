@@ -115,9 +115,9 @@ pub fn write_with_addressing_mode(memory: &mut [u8], data: &[u8], addressing_mod
 }
 
 // returns address as well as if a page change occurred
-pub fn relative_offset_page_change(address: u16, offset: i8, ) -> (u16, bool) {
+pub fn relative_offset_page_change(address: u16, offset: i8) -> (u16, bool) {
     let page_change = (offset >= 0 && (address as i32 & 0xFF + offset as i32 > 0xFF)) 
-        || (offset < 0 && (offset.abs() > (address & 0xFF).try_into().unwrap()));
+        || (offset < 0 && (offset.abs() as i32 > (address as i32 & 0xFF)));
     let new_address = (address as i32 + offset as i32) as u16;
     return (new_address, page_change);
 }

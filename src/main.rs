@@ -28,8 +28,5 @@ fn boot(file_name: String) {
     while !emulator.shut_down {
         cpu::run_cycle(&mut emulator);
         cycle += 1;
-        if cycle > 100 {
-            emulator.shut_down = true;
-        }
     }
 }

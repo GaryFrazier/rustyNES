@@ -1134,7 +1134,7 @@ fn cpy(emulator: &mut config::Emulator, value: u8) {
 
 fn dec(emulator: &mut config::Emulator, value: u8) -> u8 {
     let signed_value = value as i8;
-    let result: i8 = signed_value - 1;
+    let result: i8 = signed_value.wrapping_add(-1);
 
     // flags
     emulator.cpu.registers.status.set(register::Status::Z, result == 0);
@@ -1145,7 +1145,7 @@ fn dec(emulator: &mut config::Emulator, value: u8) -> u8 {
 }
 
 fn inc(emulator: &mut config::Emulator, value: u8) -> u8 {
-    let result: u8 = value + 1;
+    let result: u8 = value.wrapping_add(1);
 
     // flags
     emulator.cpu.registers.status.set(register::Status::Z, result == 0);
