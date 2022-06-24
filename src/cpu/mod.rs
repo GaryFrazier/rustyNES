@@ -86,7 +86,7 @@ fn run_next_instruction(emulator: &mut config::Emulator) {
     let mut opcode_iterator = instructions::OPCODES.iter();
 
     // we unwrap the find here so it crashes if the opcode is invalid, for now
-    println!("{}", opcode);
+    println!("{:#04x}", opcode);
 
     // for nestest
     let error_code = ram::read_u8(mapped_address, &mut emulator.cpu.memory, 0x2);
