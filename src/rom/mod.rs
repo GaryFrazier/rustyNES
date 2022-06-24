@@ -124,17 +124,17 @@ impl ROM {
     }
 
     fn load_body(&mut self, buffer: &Vec<u8>) {
-        let mut memory_counter: u32 = 0xF; //starts after header
+        let mut memory_counter: u32 = 0x10; //starts after header
 
         if self.header.trainer {
             self.trainer = (buffer[memory_counter as usize..(memory_counter + 0x200) as usize]).try_into().unwrap();
             memory_counter += 0x200 as u32;
         }
         
-        self.prg_rom.extend_from_slice(&buffer[memory_counter as usize..(memory_counter + (0x4000 * self.header.prg_rom_length as u32)) as usize]);
+        self.prg_rom.extend_from_slice(&buffer[memory_counter as usize..(memory_counter - 1 + (0x4000 * self.header.prg_rom_length as u32)) as usize]);
         memory_counter += 0x4000 + self.header.prg_rom_length as u32;
 
-        self.chr_rom.extend_from_slice(&buffer[memory_counter as usize..(memory_counter + (0x2000 * self.header.chr_rom_length as u32)) as usize]);
+        self.chr_rom.extend_from_slice(&buffer[memory_counter as usize..(memory_counter - 1 + (0x2000 * self.header.chr_rom_length as u32)) as usize]);
         // memory_counter += 0x2000 + self.header.chr_rom_length as u32;
 
         // TODO: playchoice stuff here once I read more on it

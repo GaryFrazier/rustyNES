@@ -5,25 +5,27 @@ use std::fmt;
 bitflags! {
     #[derive(Default)]
     pub struct Status: u8 {
-        const C = 0b0000001; // carry flag
-        const Z = 0b0000010; // zero flag
-        const I = 0b0000100; // interrupt disable
-        const D = 0b0001000; // decimal mode
-        const B = 0b0010000; // break command
-        const V = 0b0100000; // overflow flag
-        const N = 0b1000000; // negative flag
+        const C = 0b00000001; // carry flag
+        const Z = 0b00000010; // zero flag
+        const I = 0b00000100; // interrupt disable
+        const D = 0b00001000; // decimal mode
+        const B = 0b00010000; // break command
+        const U = 0b00100000; // break command
+        const V = 0b01000000; // overflow flag
+        const N = 0b10000000; // negative flag
     }
 }
 
 impl fmt::Display for Status {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // cast as u8 to show as 1 or 0, instead of the actual bitflag value
-        write!(f, "(c: {}, z: {}, i: {}, d: {}, b: {}, v: {}, n: {})\n",
+        write!(f, "(c: {}, z: {}, i: {}, d: {}, b: {}, u: {}, v: {}, n: {})\n",
             (self.bits & Status::C.bits == Status::C.bits) as u8,
             (self.bits & Status::Z.bits == Status::Z.bits) as u8,
             (self.bits & Status::I.bits == Status::I.bits) as u8,
             (self.bits & Status::D.bits == Status::D.bits) as u8,
             (self.bits & Status::B.bits == Status::B.bits) as u8,
+            (self.bits & Status::U.bits == Status::U.bits) as u8,
             (self.bits & Status::V.bits == Status::V.bits) as u8,
             (self.bits & Status::N.bits == Status::N.bits) as u8)
     }

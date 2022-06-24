@@ -111,6 +111,7 @@ fn read_stack_u8(emulator: &mut config::Emulator) -> u8 {
 fn read_stack_u16(emulator: &mut config::Emulator) -> u16 {
     let lower = read_stack_u8(emulator);
     let upper = read_stack_u8(emulator);
+    
     let result = lower as u16 | ((upper as u16) << 8);
     return result;
 }
