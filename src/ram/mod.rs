@@ -73,7 +73,7 @@ pub fn read_with_addressing_mode(memory: &mut [u8], addressing_mode: AddressingM
 }
 
 pub fn write_block(memory: &mut [u8], address: usize, data: &[u8]) {
-    let len = data.len() - 1; // todo: ensure not off by 1
+    let len = data.len(); // todo: ensure not off by 1
     let mut i: usize = 0;
     while i < len {
         memory[address + i] = data[i];

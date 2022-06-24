@@ -781,6 +781,7 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 151] = [
     // RTS - Return From Subroutine
     ("RTS",  0x60,  1, |emulator: &mut config::Emulator| -> u32 {
         emulator.cpu.registers.pc = cpu::read_stack_u16(emulator);
+        emulator.cpu.registers.pc += 1;
         return 6;
     }),
 
@@ -1093,8 +1094,9 @@ fn bit_test(emulator: &mut config::Emulator, value: u8) {
 
 // returns cycles
 fn relative_branch(emulator: &mut config::Emulator, should_branch: bool) -> u32 {
+    let offset = cpu::read_program_byte(emulator) as i8; // signed
+
     if should_branch {
-        let offset = cpu::read_program_byte(emulator) as i8; // signed
         let (address, page_change) = ram::relative_offset_page_change(emulator.cpu.registers.pc, offset);
         emulator.cpu.registers.pc = address;
         return 3 + page_change as u32;

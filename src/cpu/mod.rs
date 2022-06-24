@@ -43,24 +43,41 @@ impl fmt::Display for CPU {
 }
 
 // only runs if it is below the target cycle in order to maintain timing
-pub fn run_cycle(emulator: &mut config::Emulator, target_cycle: u32) {
-    if emulator.cpu.cycle < target_cycle {
+pub fn run_cycle(emulator: &mut config::Emulator) {
+    if emulator.cpu.cycle == 0 {
         run_next_instruction(emulator);
-        println!("{}", emulator);
+    }
+
+    if emulator.cpu.cycle > 0 {
+        emulator.cpu.cycle -= 1;
     }
 }
 
 // reads next byte in program, increments program counter
 pub fn read_program_byte(emulator: &mut config::Emulator) -> u8 {
-    let val = ram::read_u8(&mut emulator.cpu.memory, emulator.cpu.registers.pc.into());
+    let mapped_addr = mapped_address(emulator.cpu.registers.pc);
+    let val = ram::read_u8(&mut emulator.cpu.memory, mapped_addr.into());
     emulator.cpu.registers.pc += 1;
     return val;
 }
 
 pub fn read_program_word(emulator: &mut config::Emulator) -> u16 {
-    let val = ram::read_u16(&mut emulator.cpu.memory, emulator.cpu.registers.pc.into());
+    let mapped_addr = mapped_address(emulator.cpu.registers.pc);
+    let val = ram::read_u16(&mut emulator.cpu.memory, mapped_addr.into());
     emulator.cpu.registers.pc += 2;
     return val;
+}
+
+fn mapped_address(addr: u16) -> u16 {
+    if addr > 0x7ff && addr < 0x2000 {
+        return addr & 0x7ff;
+    }
+
+    if addr > 0x2007 && addr < 0x4000 {
+        return 0x2000 + (addr & 0x7);
+    }
+
+    return addr;
 }
 
 fn run_next_instruction(emulator: &mut config::Emulator) {
@@ -71,6 +88,7 @@ fn run_next_instruction(emulator: &mut config::Emulator) {
     let mut opcode_iterator = instructions::OPCODES.iter();
 
     // we unwrap the find here so it crashes if the opcode is invalid, for now
+    println!("{}", opcode);
     emulator.cpu.cycle += execute_instruction(emulator, *opcode_iterator.find(|&x| x.1 == opcode).unwrap());
 }
 
@@ -80,14 +98,15 @@ fn execute_instruction(emulator: &mut config::Emulator, instruction: (&str, u8, 
 }
 
 fn read_stack_u8(emulator: &mut config::Emulator) -> u8 {
+    emulator.cpu.registers.sp += 1;
     let result = ram::read_u8(&mut emulator.cpu.memory, (0x0100 + emulator.cpu.registers.sp as u16).into());
-	emulator.cpu.registers.sp += 1;
     return result;
 }
 
 fn read_stack_u16(emulator: &mut config::Emulator) -> u16 {
-    let result = ram::read_u16(&mut emulator.cpu.memory, (0x0100 + emulator.cpu.registers.sp as u16).into());
-	emulator.cpu.registers.sp += 2;
+    let lower = read_stack_u8(emulator);
+    let upper = read_stack_u8(emulator);
+    let result = lower as u16 | ((upper as u16) << 8);
     return result;
 }
 
@@ -97,8 +116,8 @@ fn write_stack_u8(emulator: &mut config::Emulator, value: u8) {
 }
 
 fn write_stack_u16(emulator: &mut config::Emulator, value: u16) {
-    ram::write_block(&mut emulator.cpu.memory, (0x0100 + emulator.cpu.registers.sp as u16 - 1).into(), &value.to_le_bytes());
-	emulator.cpu.registers.sp -= 2;
+    write_stack_u8(emulator, ((value >> 8) & 0xFF) as u8);
+    write_stack_u8(emulator, (value & 0xFF) as u8);
 }
 
 /*pub fn power_up(emulator: &mut config::Emulator) {
@@ -122,7 +141,6 @@ fn write_stack_u16(emulator: &mut config::Emulator, value: u16) {
 
 pub fn reset(emulator: &mut config::Emulator) {
     emulator.cpu.registers.pc = ram::read_u16(&mut emulator.cpu.memory, 0xFFFC); // 0xFFFC is the reset vector
-    //emulator.cpu.registers.pc = 0x34;
     emulator.cpu.registers.sp = 0xFD;
     emulator.cpu.registers.a = 0;
     emulator.cpu.registers.x = 0;
