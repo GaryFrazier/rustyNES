@@ -9,7 +9,7 @@ using this document for functionality reference https://www.nesdev.org/obelisk-6
 
 the name field will indicate the addressing mode with the following codes, if not specified its implicit/accumulator/etc
 A - accumulator
-I - indirect
+I - Immediate
 Z - zero page
 ZX - zero page X
 ZY - zero page Y
@@ -20,7 +20,7 @@ IX - indirect X
 IY - indirect Y
 R - relative
 */
-pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 151] = [
+pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 158] = [
     // ADC - Add with Carry
     ("ADC - I",  0x69,  2, |emulator: &mut config::Emulator| -> u32 {
         let value = cpu::read_program_byte(emulator);
@@ -982,6 +982,53 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 151] = [
         emulator.cpu.registers.status.set(register::Status::N, emulator.cpu.registers.a & 0x80 == 0x80);
         return 2;
     }),
+
+    ///////////////////// UNOFFICAL OPCODES
+
+    // AAC
+    ("AAC - I - 1",  0x0b,  2, |emulator: &mut config::Emulator| -> u32 {
+        let value = cpu::read_program_byte(emulator);
+        aac(emulator, value);
+        return 2;
+    }),
+    ("AAC - I - 2",  0x2b,  2, |emulator: &mut config::Emulator| -> u32 {
+        let value = cpu::read_program_byte(emulator);
+        aac(emulator, value);
+        return 2;
+    }),
+
+    // AAX
+    ("AAX - Z",  0x87,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let result = aax(emulator);
+        ram::write_with_addressing_mode(cpu::mapped_address, &mut emulator.cpu.memory, &[result], ram::AddressingMode::ZeroPage { address });
+        return 3;
+    }),
+    ("AAX - ZY",  0x97,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let result = aax(emulator);
+        ram::write_with_addressing_mode(cpu::mapped_address, &mut emulator.cpu.memory, &[result], ram::AddressingMode::ZeroPageY { address, y: emulator.cpu.registers.y });
+        return 4;
+    }),
+    ("AAX - A",  0x8F,  3, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_word(emulator);
+        let result = aax(emulator);
+        ram::write_with_addressing_mode(cpu::mapped_address, &mut emulator.cpu.memory, &[result], ram::AddressingMode::Absolute { address });
+        return 4;
+    }),
+    ("AAX - IX",  0x83,  2, |emulator: &mut config::Emulator| -> u32 {
+        let address = cpu::read_program_byte(emulator);
+        let result = aax(emulator);
+        ram::write_with_addressing_mode(cpu::mapped_address, &mut emulator.cpu.memory, &[result], ram::AddressingMode::IndirectX { address, x: emulator.cpu.registers.x  });
+        return 6;
+    }),
+
+    // ARR
+    ("ARR - I",  0x6b,  2, |emulator: &mut config::Emulator| -> u32 {
+        let value = cpu::read_program_byte(emulator);
+        arr(emulator, value);
+        return 2;
+    }),
 ];
 
 fn adc(emulator: &mut config::Emulator, value: u8) {
@@ -1204,4 +1251,49 @@ fn ldy(emulator: &mut config::Emulator, value: u8) {
     
     // registers
     emulator.cpu.registers.y = value;
+}
+
+
+// UNOFICAL OPCODES
+fn aac(emulator: &mut config::Emulator, value: u8) {
+    let result = emulator.cpu.registers.a & value;
+
+    // flags
+    emulator.cpu.registers.status.set(register::Status::C, result & 0x80 == 0x80);
+    emulator.cpu.registers.status.set(register::Status::Z, result == 0);
+    emulator.cpu.registers.status.set(register::Status::N, result & 0x80 == 0x80);
+}
+
+fn aax(emulator: &mut config::Emulator) -> u8 {
+    let result = emulator.cpu.registers.a & emulator.cpu.registers.x;
+
+    // flags
+    emulator.cpu.registers.status.set(register::Status::Z, result == 0);
+    emulator.cpu.registers.status.set(register::Status::N, result & 0x80 == 0x80);
+
+    return result;
+}
+
+fn arr(emulator: &mut config::Emulator, value: u8) {
+    let result = emulator.cpu.registers.a & value;
+
+    // flags
+    emulator.cpu.registers.status.set(register::Status::Z, result == 0);
+    emulator.cpu.registers.status.set(register::Status::N, result & 0x80 == 0x80);
+
+    emulator.cpu.registers.a = emulator.cpu.registers.a >> 1;
+
+    if emulator.cpu.registers.a & 0x20 == 0x20 && emulator.cpu.registers.a & 0x40 == 0x40 {
+        emulator.cpu.registers.status.set(register::Status::C, true);
+        emulator.cpu.registers.status.set(register::Status::V, false);
+    } else if emulator.cpu.registers.a & 0x20 != 0x20 && emulator.cpu.registers.a & 0x40 != 0x40 {
+        emulator.cpu.registers.status.set(register::Status::C, false);
+        emulator.cpu.registers.status.set(register::Status::V, false);
+    } else if emulator.cpu.registers.a & 0x20 == 0x20 && emulator.cpu.registers.a & 0x40 != 0x40 {
+        emulator.cpu.registers.status.set(register::Status::C, false);
+        emulator.cpu.registers.status.set(register::Status::V, true);
+    } else if emulator.cpu.registers.a & 0x20 != 0x20 && emulator.cpu.registers.a & 0x40 == 0x40 {
+        emulator.cpu.registers.status.set(register::Status::C, true);
+        emulator.cpu.registers.status.set(register::Status::V, true);
+    }
 }

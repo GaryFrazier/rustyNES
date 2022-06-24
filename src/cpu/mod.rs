@@ -42,7 +42,6 @@ impl fmt::Display for CPU {
     }
 }
 
-// only runs if it is below the target cycle in order to maintain timing
 pub fn run_cycle(emulator: &mut config::Emulator) {
     if emulator.cpu.cycle == 0 {
         run_next_instruction(emulator);
@@ -146,7 +145,7 @@ fn write_stack_u16(emulator: &mut config::Emulator, value: u16) {
 }*/
 
 pub fn reset(emulator: &mut config::Emulator) {
-    emulator.cpu.registers.pc = 0xC000; //ram::read_u16(&mut emulator.cpu.memory, 0xFFFC); // 0xFFFC is the reset vector
+    emulator.cpu.registers.pc = ram::read_u16(mapped_address, &mut emulator.cpu.memory, 0xFFFC); // 0xFFFC is the reset vector, c000 for nestest
     emulator.cpu.registers.sp = 0xFD;
     emulator.cpu.registers.a = 0;
     emulator.cpu.registers.x = 0;

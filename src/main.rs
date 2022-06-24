@@ -20,13 +20,14 @@ fn boot(file_name: String) {
 
     rom::init_mapper(&mut emulator);
     cpu::reset(&mut emulator);
-    
+    ppu::reset(&mut emulator);
     println!("{}", emulator);
 
     let mut cycle = 0;
     // main loop
     while !emulator.shut_down {
         cpu::run_cycle(&mut emulator);
+        ppu::run_cycle(&mut emulator);
         cycle += 1;
     }
 }

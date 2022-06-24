@@ -1,6 +1,7 @@
 use crate::config;
 use crate::ram;
 use crate::cpu;
+use crate::ppu;
 
 
 // mappers determine how rom data is loaded as well as how to switch in data when writes are sent to the rom area (https://www.nesdev.org/wiki/Mapper)
@@ -16,6 +17,6 @@ pub static MAPPERS: [(u8, fn(&mut config::Emulator)); 1] = [
             ram::write_block(cpu::mapped_address, &mut emulator.cpu.memory, 0x8000, &emulator.rom.prg_rom);
         }
 
-        ram::write_block(cpu::mapped_address, &mut emulator.ppu.memory, 0x0000, &emulator.rom.chr_rom); //todo change mapper
+        ram::write_block(ppu::mapped_address, &mut emulator.ppu.memory, 0x0000, &emulator.rom.chr_rom); //todo change mapper
     })
 ];
