@@ -19,7 +19,7 @@ fn boot(file_name: String) {
     };
 
     rom::init_mapper(&mut emulator);
-    cpu::power_up(&mut emulator);
+    cpu::reset(&mut emulator);
     
     let mut master_cycle: u32 = 1;
 
@@ -30,7 +30,7 @@ fn boot(file_name: String) {
         cpu::run_cycle(&mut emulator, master_cycle);
         master_cycle += 1;
 
-        if master_cycle > 20 {
+        if master_cycle > 300 {
             emulator.shut_down = true;
         }
     }

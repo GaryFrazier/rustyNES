@@ -210,7 +210,8 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 151] = [
     // BRK - Force Interrupt
     ("BRK",  0x00,  1, |emulator: &mut config::Emulator| -> u32 {
         emulator.cpu.registers.status.set(register::Status::B, true);
-        return 7;
+        cpu::irq(emulator);
+        return 0; // cycles handled by irq
     }),
     
     // CLC - Clear Carry Flag

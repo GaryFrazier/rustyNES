@@ -22,7 +22,7 @@ use crate::ram;
 
 pub struct CPU {
     pub registers: register::Registers,
-    pub memory: [u8; 0xffff],
+    pub memory: [u8; 0x10000],
     pub cycle: u32,
 }
 
@@ -30,7 +30,7 @@ impl Default for CPU {
     fn default() -> CPU {
         CPU {
             registers: register::Registers {..Default::default()},
-            memory: [0; 0xffff],
+            memory: [0; 0x10000],
             cycle: 0,
         }
     }
@@ -101,8 +101,9 @@ fn write_stack_u16(emulator: &mut config::Emulator, value: u16) {
 	emulator.cpu.registers.sp -= 2;
 }
 
-pub fn power_up(emulator: &mut config::Emulator) {
-    emulator.cpu.registers.pc = 0x34;
+/*pub fn power_up(emulator: &mut config::Emulator) {
+    emulator.cpu.registers.pc = ram::read_u16(&mut emulator.cpu.memory, 0xFFFC); // 0xFFFC is the reset vector
+    //emulator.cpu.registers.pc = 0x34;
     emulator.cpu.registers.sp = 0xFD;
     emulator.cpu.registers.a = 0;
     emulator.cpu.registers.x = 0;
@@ -117,4 +118,54 @@ pub fn power_up(emulator: &mut config::Emulator) {
 
     let null_mem = [0; 0x3];
     ram::write_block(&mut emulator.cpu.memory, 0x4010, &null_mem);
+}*/
+
+pub fn reset(emulator: &mut config::Emulator) {
+    emulator.cpu.registers.pc = ram::read_u16(&mut emulator.cpu.memory, 0xFFFC); // 0xFFFC is the reset vector
+    //emulator.cpu.registers.pc = 0x34;
+    emulator.cpu.registers.sp = 0xFD;
+    emulator.cpu.registers.a = 0;
+    emulator.cpu.registers.x = 0;
+    emulator.cpu.registers.y = 0;
+
+    let null_mem = [0; 0x1];
+    ram::write_block(&mut emulator.cpu.memory, 0x4017, &null_mem);
+    ram::write_block(&mut emulator.cpu.memory, 0x4015, &null_mem);
+
+    let null_mem = [0; 0xF];
+    ram::write_block(&mut emulator.cpu.memory, 0x4000, &null_mem);
+
+    let null_mem = [0; 0x3];
+    ram::write_block(&mut emulator.cpu.memory, 0x4010, &null_mem);
+
+    emulator.cpu.cycle += 8;
+}
+
+pub fn irq(emulator: &mut config::Emulator) {
+    if !emulator.cpu.registers.status.contains(register::Status::I) {
+        write_stack_u16(emulator, emulator.cpu.registers.pc);
+
+        emulator.cpu.registers.status.set(register::Status::B, false);
+        //emulator.cpu.registers.status.set(register::Status::U, true);
+        emulator.cpu.registers.status.set(register::Status::I, true);
+
+        write_stack_u8(emulator, emulator.cpu.registers.status.bits());
+        emulator.cpu.registers.pc = ram::read_u16(&mut emulator.cpu.memory, 0xFFFE);
+
+        emulator.cpu.cycle += 7
+    }
+    
+}
+
+pub fn nmi(emulator: &mut config::Emulator) {
+    write_stack_u16(emulator, emulator.cpu.registers.pc);
+
+    emulator.cpu.registers.status.set(register::Status::B, false);
+    //emulator.cpu.registers.status.set(register::Status::U, true);
+    emulator.cpu.registers.status.set(register::Status::I, true);
+
+    write_stack_u8(emulator, emulator.cpu.registers.status.bits());
+    emulator.cpu.registers.pc = ram::read_u16(&mut emulator.cpu.memory, 0xFFFA);
+
+    emulator.cpu.cycle += 8
 }

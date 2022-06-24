@@ -20,16 +20,16 @@ use std::fmt;
 */
 
 pub struct PPU {
-    pub memory: [u8; 0x3fff],
-    pub oam: [u8; 0xff],
+    pub memory: [u8; 0x4000],
+    pub oam: [u8; 0x100],
     pub cycle: u32,
 }
 
 impl Default for PPU {
     fn default() -> PPU {
         PPU {
-            memory: [0; 0x3fff],
-            oam: [0; 0xff],
+            memory: [0; 0x4000],
+            oam: [0; 0x100],
             cycle: 0,
         }
     }
