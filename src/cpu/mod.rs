@@ -55,20 +55,18 @@ pub fn run_cycle(emulator: &mut config::Emulator) {
 
 // reads next byte in program, increments program counter
 pub fn read_program_byte(emulator: &mut config::Emulator) -> u8 {
-    let mapped_addr = mapped_address(emulator.cpu.registers.pc);
-    let val = ram::read_u8(&mut emulator.cpu.memory, mapped_addr.into());
+    let val = ram::read_u8(mapped_address, &mut emulator.cpu.memory, emulator.cpu.registers.pc.into());
     emulator.cpu.registers.pc += 1;
     return val;
 }
 
 pub fn read_program_word(emulator: &mut config::Emulator) -> u16 {
-    let mapped_addr = mapped_address(emulator.cpu.registers.pc);
-    let val = ram::read_u16(&mut emulator.cpu.memory, mapped_addr.into());
+    let val = ram::read_u16(mapped_address, &mut emulator.cpu.memory, emulator.cpu.registers.pc.into());
     emulator.cpu.registers.pc += 2;
     return val;
 }
 
-fn mapped_address(addr: u16) -> u16 {
+pub fn mapped_address(addr: usize) -> usize {
     if addr > 0x7ff && addr < 0x2000 {
         return addr & 0x7ff;
     }
@@ -82,7 +80,7 @@ fn mapped_address(addr: u16) -> u16 {
 
 fn run_next_instruction(emulator: &mut config::Emulator) {
     // read next byte at the program counter location to get the opcode
-    let opcode = ram::read_u8(&mut emulator.cpu.memory, emulator.cpu.registers.pc.into());
+    let opcode = ram::read_u8(mapped_address, &mut emulator.cpu.memory, emulator.cpu.registers.pc.into());
     emulator.cpu.registers.pc += 1;
 
     let mut opcode_iterator = instructions::OPCODES.iter();
@@ -91,9 +89,9 @@ fn run_next_instruction(emulator: &mut config::Emulator) {
     println!("{}", opcode);
 
     // for nestest
-    let error_code = ram::read_u8(&mut emulator.cpu.memory, 0x2);
+    let error_code = ram::read_u8(mapped_address, &mut emulator.cpu.memory, 0x2);
     if error_code > 0 {
-        println!("error {}", ram::read_u8(&mut emulator.cpu.memory, 0x2)); 
+        println!("error {}", ram::read_u8(mapped_address, &mut emulator.cpu.memory, 0x2)); 
     }
     
     emulator.cpu.cycle += execute_instruction(emulator, *opcode_iterator.find(|&x| x.1 == opcode).unwrap());
@@ -106,7 +104,7 @@ fn execute_instruction(emulator: &mut config::Emulator, instruction: (&str, u8, 
 
 fn read_stack_u8(emulator: &mut config::Emulator) -> u8 {
     emulator.cpu.registers.sp += 1;
-    let result = ram::read_u8(&mut emulator.cpu.memory, (0x0100 + emulator.cpu.registers.sp as u16).into());
+    let result = ram::read_u8(mapped_address, &mut emulator.cpu.memory, (0x0100 + emulator.cpu.registers.sp as u16).into());
     return result;
 }
 
@@ -118,7 +116,7 @@ fn read_stack_u16(emulator: &mut config::Emulator) -> u16 {
 }
 
 fn write_stack_u8(emulator: &mut config::Emulator, value: u8) {
-    ram::write_block(&mut emulator.cpu.memory, (0x0100 + emulator.cpu.registers.sp as u16).into(), &value.to_le_bytes());
+    ram::write_block(mapped_address, &mut emulator.cpu.memory, (0x0100 + emulator.cpu.registers.sp as u16).into(), &value.to_le_bytes());
 	emulator.cpu.registers.sp -= 1;
 }
 
@@ -154,14 +152,14 @@ pub fn reset(emulator: &mut config::Emulator) {
     emulator.cpu.registers.y = 0;
 
     let null_mem = [0; 0x1];
-    ram::write_block(&mut emulator.cpu.memory, 0x4017, &null_mem);
-    ram::write_block(&mut emulator.cpu.memory, 0x4015, &null_mem);
+    ram::write_block(mapped_address, &mut emulator.cpu.memory, 0x4017, &null_mem);
+    ram::write_block(mapped_address, &mut emulator.cpu.memory, 0x4015, &null_mem);
 
     let null_mem = [0; 0xF];
-    ram::write_block(&mut emulator.cpu.memory, 0x4000, &null_mem);
+    ram::write_block(mapped_address, &mut emulator.cpu.memory, 0x4000, &null_mem);
 
     let null_mem = [0; 0x3];
-    ram::write_block(&mut emulator.cpu.memory, 0x4010, &null_mem);
+    ram::write_block(mapped_address, &mut emulator.cpu.memory, 0x4010, &null_mem);
 
     emulator.cpu.cycle += 8;
 }
@@ -175,7 +173,7 @@ pub fn irq(emulator: &mut config::Emulator) {
         emulator.cpu.registers.status.set(register::Status::I, true);
 
         write_stack_u8(emulator, emulator.cpu.registers.status.bits());
-        emulator.cpu.registers.pc = ram::read_u16(&mut emulator.cpu.memory, 0xFFFE);
+        emulator.cpu.registers.pc = ram::read_u16(mapped_address, &mut emulator.cpu.memory, 0xFFFE);
 
         emulator.cpu.cycle += 7
     }
@@ -190,7 +188,7 @@ pub fn nmi(emulator: &mut config::Emulator) {
     emulator.cpu.registers.status.set(register::Status::I, true);
 
     write_stack_u8(emulator, emulator.cpu.registers.status.bits());
-    emulator.cpu.registers.pc = ram::read_u16(&mut emulator.cpu.memory, 0xFFFA);
+    emulator.cpu.registers.pc = ram::read_u16(mapped_address, &mut emulator.cpu.memory, 0xFFFA);
 
     emulator.cpu.cycle += 8
 }
