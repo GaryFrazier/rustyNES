@@ -465,7 +465,21 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 151] = [
         return 3;
     }),
     ("JMP - Indirect",  0x6C,  3, |emulator: &mut config::Emulator| -> u32 {
-        let address = cpu::read_program_word(emulator);
+        let mut address = cpu::read_program_word(emulator);
+
+        if address & 0xFF == 0xFF {
+            let new_low = ram::read_u8(cpu::mapped_address, &mut emulator.cpu.memory, address.into());
+            let high = address >> 8;
+            address += 1;
+            address = address & 0xFF;
+            address = address | ((high as u16) << 8);
+            let new_high = ram::read_u8(cpu::mapped_address, &mut emulator.cpu.memory, address.into());
+            println!("{}",address);
+            let calced_value = ((new_high as u16) << 8) | new_low as u16;
+            jmp(emulator, calced_value);
+            return 5;
+        }
+
         let value = ram::read_u16(cpu::mapped_address, &mut emulator.cpu.memory, address.into());
         jmp(emulator, value);
         return 5;

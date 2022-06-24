@@ -49,22 +49,22 @@ pub fn read_with_addressing_mode(addr_mapper: fn(usize)-> usize, memory: &mut [u
             page_cross = false;
         },
         AddressingMode::AbsoluteX { address, x } => {
-            value = read_u8(addr_mapper, memory, (address + x as u16).into());
+            value = read_u8(addr_mapper, memory, (address.wrapping_add(x as u16)).into());
             page_cross = address & 0xFF + x as u16 > 0xFF;
         },
         AddressingMode::AbsoluteY { address, y } => {
-            value = read_u8(addr_mapper, memory, (address + y as u16).into());
+            value = read_u8(addr_mapper, memory, (address.wrapping_add(y as u16)).into());
             page_cross = address & 0xFF + y as u16 > 0xFF;
         },
         AddressingMode::IndirectX { address, x } => {
-            let calculated_address: u16 = address as u16 + x as u16;
+            let calculated_address: u16 = (address as u16).wrapping_add(x as u16);
             let indexed_value = read_u16(addr_mapper, memory, calculated_address.into());
             value = read_u8(addr_mapper, memory, indexed_value.into());
             page_cross = false;
         },
         AddressingMode::IndirectY { address, y } => {
             let indexed_value = read_u16(addr_mapper, memory, address.into());
-            let calculated_address: u16 = indexed_value + y as u16;
+            let calculated_address: u16 = indexed_value.wrapping_add(y as u16);
             value =  read_u8(addr_mapper, memory, calculated_address.into());
             page_cross = calculated_address > 0xFF;
         },
