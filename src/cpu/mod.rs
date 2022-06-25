@@ -3,7 +3,7 @@ mod instructions;
 use std::fmt;
 use crate::config;
 use crate::ram;
-
+use crate::ram::AddressingMode;
 /* 
     The NES cpu is a modified version of the 6502 processing unit, instructions
     defined here will be reflecting those of the 6502.
@@ -85,7 +85,7 @@ fn run_next_instruction(emulator: &mut config::Emulator) {
     let mut opcode_iterator = instructions::OPCODES.iter();
 
     // we unwrap the find here so it crashes if the opcode is invalid, for now
-    println!("{:#04x} {:#04x}", emulator.cpu.registers.pc - 1, opcode);
+    //println!("{:#04x} {:#04x}", emulator.cpu.registers.pc - 1, opcode);
 
     // for nestest
     let error_code = ram::read_u8(mapped_address, &mut emulator.cpu.memory, 0x2);
@@ -191,4 +191,54 @@ pub fn nmi(emulator: &mut config::Emulator) {
     emulator.cpu.registers.pc = ram::read_u16(mapped_address, &mut emulator.cpu.memory, 0xFFFA);
 
     emulator.cpu.cycle += 8
+}
+
+
+fn handle_connected_memory(emulator: &mut config::Emulator, address: usize, data: &[u8]) {
+    match address {
+        0x2000 => {
+
+        },
+        _ => {
+
+        }
+    }
+}
+
+// interface for ram, maybe revert
+pub fn write_block(emulator: &mut config::Emulator, addr_mapper: fn(usize)-> usize, address: usize, data: &[u8]) {
+    ram::write_block(addr_mapper, &mut emulator.cpu.memory, address, data);
+}
+
+pub fn write_with_addressing_mode(emulator: &mut config::Emulator, addr_mapper: fn(usize) -> usize, data: &[u8], addressing_mode: AddressingMode) {
+    match addressing_mode {
+        ram::AddressingMode::ZeroPage { address } => {
+            write_block(emulator, addr_mapper, address.into(), data);
+        },
+        ram::AddressingMode::ZeroPageX { address, x } => {
+            write_block(emulator, addr_mapper, ((address as u16 + x as u16) & 0xFF).into(), data);
+        },
+        ram::AddressingMode::ZeroPageY { address, y } => {
+            write_block(emulator, addr_mapper, ((address as u16 + y as u16) & 0xFF).into(), data);
+        },
+        ram::AddressingMode::Absolute { address } => {
+            write_block(emulator, addr_mapper, address.into(), data);
+        },
+        ram::AddressingMode::AbsoluteX { address, x } => {
+            write_block(emulator, addr_mapper, (address + x as u16).into(), data);
+        },
+        ram::AddressingMode::AbsoluteY { address, y } => {
+            write_block(emulator, addr_mapper, (address + y as u16).into(), data);
+        },
+        ram::AddressingMode::IndirectX { address, x } => {
+            let calculated_address: u16 = address as u16 + x as u16;
+            let indexed_value = ram::read_u16(addr_mapper, &mut emulator.cpu.memory, calculated_address.into());
+            write_block(emulator, addr_mapper, indexed_value.into(), data);
+        },
+        ram::AddressingMode::IndirectY { address, y } => {
+            let indexed_value = ram::read_u16(addr_mapper, &mut emulator.cpu.memory, address.into());
+            let calculated_address: u16 = indexed_value + y as u16;
+            write_block(emulator, addr_mapper, calculated_address.into(), data);
+        },
+    }
 }
