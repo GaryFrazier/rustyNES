@@ -1,2 +1,2 @@
 # rustyNES
-NES emulator in Rust
+6502 emulation in Rust, ppu support to be done at a later date as well as implementation of unofficial opcodes
