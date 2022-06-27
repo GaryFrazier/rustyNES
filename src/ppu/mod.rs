@@ -22,14 +22,16 @@ use crate::config;
 
 static SCREEN_WIDTH: i32 = 256;
 static SCREEN_HEIGHT: i32 = 240;
-static TOTAL_SCANLINES: i32 = 261; // Vblank beyond screen height, after vblank set scanline to -1
-static CYCLES_PER_SCANLINE: i32 = 341;
+
+// index 0 based
+static TOTAL_SCANLINES: i32 = 262; // Vblank beyond screen height, 261 is pre render line
+pub static CYCLES_PER_SCANLINE: i32 = 341;
 
 pub struct PPU {
     pub memory: [u8; 0x4000],
     pub oam: [u8; 0x100],
     pub cycle: u32,
-    pub scanline: i32,
+    pub scanline: u32,
 
     pub ppu_ctrl: u8,
     pub ppu_mask: u8,
@@ -49,7 +51,7 @@ impl Default for PPU {
             memory: [0; 0x4000],
             oam: [0; 0x100],
             cycle: 0,
-            scanline: -1,
+            scanline: 0,
             
             ppu_ctrl: 0,
             ppu_mask: 0,
@@ -93,7 +95,7 @@ pub fn run_cycle(emulator: &mut config::Emulator) {
 
 pub fn reset(emulator: &mut config::Emulator) {
     emulator.ppu.cycle = 0;
-    emulator.ppu.scanline = -1;
+    emulator.ppu.scanline = 0;
     emulator.ppu.ppu_ctrl = 0;
     emulator.ppu.ppu_mask = 0;
     emulator.ppu.ppu_status = 0;
