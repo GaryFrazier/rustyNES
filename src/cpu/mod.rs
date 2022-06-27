@@ -193,11 +193,71 @@ pub fn nmi(emulator: &mut config::Emulator) {
     emulator.cpu.cycle += 8
 }
 
+fn handle_ppu_memory_read(emulator: &mut config::Emulator, address: usize) -> Option<u8> {
+    let mapped_addr = mapped_address(address);
 
-fn handle_connected_memory(emulator: &mut config::Emulator, address: usize, data: &[u8]) {
-    match address {
+    match mapped_addr {
+        0x2002 => {
+            // data = (status.reg & 0xE0) | (ppu_data_buffer & 0x1F); may not need for now
+            // Clear the vertical blanking flag
+            ppu::set_vblank(emulator, false);
+            // Reset Loopy's Address latch flag
+            emulator.ppu.ppu_addr_latch = false;
+            //return Some(data);
+        },
+        0x2007 => {
+            // Reads from the NameTable ram get delayed one cycle, 
+            // so output buffer which contains the data from the 
+            // previous read request
+            data = ppu_data_buffer;
+            // then update the buffer for next time
+            ppu_data_buffer = ppuRead(vram_addr.reg);
+            // However, if the address was in the palette range, the
+            // data is not delayed, so it returns immediately
+            if (vram_addr.reg >= 0x3F00) data = ppu_data_buffer;
+            // All reads from PPU data automatically increment the nametable
+            // address depending upon the mode set in the control register.
+            // If set to vertical mode, the increment is 32, so it skips
+            // one whole nametable row; in horizontal mode it just increments
+            // by 1, moving to the next column
+            vram_addr.reg += (control.increment_mode ? 32 : 1);
+            return Some(data);
+        },
+        _ => {
+
+        }
+    }
+
+    return None;
+}
+
+
+fn handle_ppu_memory_write(emulator: &mut config::Emulator, address: usize, data: &[u8]) {
+    let mapped_addr = mapped_address(address);
+    match mapped_addr {
         0x2000 => {
-
+            emulator.ppu.ppu_ctrl = data[0];
+        },
+        0x2001 => {
+            emulator.ppu.ppu_mask = data[0];
+        },
+        0x2006 => {
+            if emulator.ppu.ppu_addr_latch == false {
+                emulator.ppu.ppu_addr = (emulator.ppu.ppu_addr & 0xFF00) | data[0];
+                emulator.ppu.ppu_addr_latch = true;
+            } else {
+                emulator.ppu.ppu_addr = (emulator.ppu.ppu_addr & 0x00FF) | (data[0] << 8);
+                emulator.ppu.ppu_addr_latch = false;
+            }
+        },
+        0x2007 => {
+            ppuWrite(vram_addr.reg, data);
+            // All writes from PPU data automatically increment the nametable
+            // address depending upon the mode set in the control register.
+            // If set to vertical mode, the increment is 32, so it skips
+            // one whole nametable row; in horizontal mode it just increments
+            // by 1, moving to the next column
+            emulator.ppu.ppu_addr += ppu::get_control_increment_mode(emulator) ? 32 : 1
         },
         _ => {
 
@@ -205,8 +265,70 @@ fn handle_connected_memory(emulator: &mut config::Emulator, address: usize, data
     }
 }
 
-// interface for ram, maybe revert
+
+// interface for ram
+pub fn read_u8(emulator: &mut config::Emulator, addr_mapper: fn(usize)-> usize, address: usize ) -> u8 {
+    let ppu_res = handle_ppu_memory_read(emulator, address);
+
+    match ppu_res {
+        Some(x) => {
+            return x;
+        },
+        None => {
+            return ram::read_u8(addr_mapper, &mut emulator.cpu.memory, address);
+        }
+    }
+}
+
+// return value at address as well as a bool indicating if a page cross happened
+pub fn read_with_addressing_mode(emulator: &mut config::Emulator, addr_mapper: fn(usize)-> usize, addressing_mode: AddressingMode) -> (u8, bool) {
+    let value: u8;
+    let page_cross: bool;
+
+    match addressing_mode {
+        AddressingMode::ZeroPage { address } => {
+            value = read_u8(emulator, addr_mapper, address.into());
+            page_cross = false;
+        },
+        AddressingMode::ZeroPageX { address, x } => {
+            value = read_u8(emulator, addr_mapper, ((address as u16 + x as u16) & 0xFF).into());
+            page_cross = false;
+        },
+        AddressingMode::ZeroPageY { address, y } => {
+            value = read_u8(emulator, addr_mapper, ((address as u16 + y as u16) & 0xFF).into());
+            page_cross = false;
+        },
+        AddressingMode::Absolute { address } => {
+            value = read_u8(emulator, addr_mapper, address.into());
+            page_cross = false;
+        },
+        AddressingMode::AbsoluteX { address, x } => {
+            value = read_u8(emulator, addr_mapper, (address.wrapping_add(x as u16)).into());
+            page_cross = address & 0xFF + x as u16 > 0xFF;
+        },
+        AddressingMode::AbsoluteY { address, y } => {
+            value = read_u8(emulator, addr_mapper, (address.wrapping_add(y as u16)).into());
+            page_cross = address & 0xFF + y as u16 > 0xFF;
+        },
+        AddressingMode::IndirectX { address, x } => {
+            let calculated_address: u16 = (address as u16).wrapping_add(x as u16);
+            let indexed_value = ram::read_u16(addr_mapper, &mut emulator.cpu.memory, calculated_address.into());
+            value = read_u8(emulator, addr_mapper, indexed_value.into());
+            page_cross = false;
+        },
+        AddressingMode::IndirectY { address, y } => {
+            let indexed_value = read_u16(addr_mapper, &mut emulator.cpu.memory, address.into());
+            let calculated_address: u16 = indexed_value.wrapping_add(y as u16);
+            value =  read_u8(emultaor, addr_mapper, calculated_address.into());
+            page_cross = calculated_address > 0xFF;
+        },
+    }
+
+    return (value, page_cross);
+}
+
 pub fn write_block(emulator: &mut config::Emulator, addr_mapper: fn(usize)-> usize, address: usize, data: &[u8]) {
+    handle_ppu_memory_write(emulator);
     ram::write_block(addr_mapper, &mut emulator.cpu.memory, address, data);
 }
 

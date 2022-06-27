@@ -40,7 +40,7 @@ pub struct PPU {
     pub ppu_scroll_latch: bool,
     pub ppu_addr_latch: bool,
     pub ppu_scroll: u8,
-    pub ppu_addr: u8,
+    pub ppu_addr: u16,
     pub ppu_data: u16,
     pub odd_frame: bool,
 }
@@ -86,11 +86,40 @@ pub fn mapped_address(addr: usize) -> usize {
 }
 
 pub fn run_cycle(emulator: &mut config::Emulator) {
-    
-
-    if emulator.ppu.cycle > 0 {
-        emulator.ppu.cycle -= 1;
+    match emulator.ppu.scanline {
+        0..=239 => process_visible_scanline(),
+        240 => process_post_scanline(),
+        241 => process_nmi(),
+        261 => process_pre_scanline(),
     }
+
+    // Update cycle and scanline counters:
+    emulator.ppu.cycle += 1;
+    if emulator.ppu.cycle > 340 {
+        emulator.ppu.cycle %= 341;
+        emulator.ppu.scanline += 1
+        if (emulator.ppu.scanline > 261)
+        {
+            emulator.ppu.scanline = 0;
+            emulator.ppu.odd_frame ^= 1;
+        }
+    }
+}
+
+fn process_visible_scanline(emulator: &mut config::Emulator) {
+
+}
+
+fn process_post_scanline(emulator: &mut config::Emulator) {
+    
+}
+
+fn process_nmi(emulator: &mut config::Emulator) {
+    
+}
+
+fn process_pre_scanline(emulator: &mut config::Emulator) {
+    
 }
 
 pub fn reset(emulator: &mut config::Emulator) {

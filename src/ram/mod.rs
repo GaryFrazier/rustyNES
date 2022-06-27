@@ -26,53 +26,6 @@ pub fn read_u16(addr_mapper: fn(usize)-> usize, memory: &mut [u8], address: usiz
     u16::from_le_bytes(read(addr_mapper, memory, address, 2).try_into().expect("tried to parse u16 with incorrect length slice"))
 }
 
-// return value at address as well as a bool indicating if a page cross happened
-pub fn read_with_addressing_mode(addr_mapper: fn(usize)-> usize, memory: &mut [u8], addressing_mode: AddressingMode) -> (u8, bool) {
-    let value: u8;
-    let page_cross: bool;
-
-    match addressing_mode {
-        AddressingMode::ZeroPage { address } => {
-            value = read_u8(addr_mapper, memory, address.into());
-            page_cross = false;
-        },
-        AddressingMode::ZeroPageX { address, x } => {
-            value = read_u8(addr_mapper, memory, ((address as u16 + x as u16) & 0xFF).into());
-            page_cross = false;
-        },
-        AddressingMode::ZeroPageY { address, y } => {
-            value = read_u8(addr_mapper, memory, ((address as u16 + y as u16) & 0xFF).into());
-            page_cross = false;
-        },
-        AddressingMode::Absolute { address } => {
-            value = read_u8(addr_mapper, memory, address.into());
-            page_cross = false;
-        },
-        AddressingMode::AbsoluteX { address, x } => {
-            value = read_u8(addr_mapper, memory, (address.wrapping_add(x as u16)).into());
-            page_cross = address & 0xFF + x as u16 > 0xFF;
-        },
-        AddressingMode::AbsoluteY { address, y } => {
-            value = read_u8(addr_mapper, memory, (address.wrapping_add(y as u16)).into());
-            page_cross = address & 0xFF + y as u16 > 0xFF;
-        },
-        AddressingMode::IndirectX { address, x } => {
-            let calculated_address: u16 = (address as u16).wrapping_add(x as u16);
-            let indexed_value = read_u16(addr_mapper, memory, calculated_address.into());
-            value = read_u8(addr_mapper, memory, indexed_value.into());
-            page_cross = false;
-        },
-        AddressingMode::IndirectY { address, y } => {
-            let indexed_value = read_u16(addr_mapper, memory, address.into());
-            let calculated_address: u16 = indexed_value.wrapping_add(y as u16);
-            value =  read_u8(addr_mapper, memory, calculated_address.into());
-            page_cross = calculated_address > 0xFF;
-        },
-    }
-
-    return (value, page_cross);
-}
-
 pub fn write_block(addr_mapper: fn(usize)-> usize, memory: &mut [u8], address: usize, data: &[u8]) {
     let len = data.len(); // todo: ensure not off by 1
     let mut i: usize = 0;
