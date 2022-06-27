@@ -42,7 +42,7 @@ fn init_canvas(emulator: &mut config::Emulator) -> Result<(), String> {
     let mut canvas = window.into_canvas().build()
         .expect("could not make a canvas");
 
-    canvas.set_draw_color(Color::RGB(0, 255, 255));
+    canvas.set_draw_color(Color::RGB(0, 0, 0));
     canvas.clear();
     canvas.present();
     let mut event_pump = sdl_context.event_pump()?;
@@ -60,12 +60,14 @@ fn init_canvas(emulator: &mut config::Emulator) -> Result<(), String> {
                 _ => {}
             }
         }
-        // The rest of the game loop goes here...
-        //while !emulator.shut_down {
-            cpu::run_cycle(emulator);
+
+        for _ in 1..29781 {
             ppu::run_cycle(emulator);
-            //cycle += 1;
-        //}
+            ppu::run_cycle(emulator);
+            ppu::run_cycle(emulator);
+
+            cpu::run_cycle(emulator);
+        }
 
         canvas.present();
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
