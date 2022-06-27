@@ -4,6 +4,10 @@ mod ram;
 mod rom;
 mod ppu;
 use std::env;
+use sdl2::pixels::Color;
+use sdl2::event::Event;
+use sdl2::keyboard::Keycode;
+use std::time::Duration;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -23,11 +27,49 @@ fn boot(file_name: String) {
     ppu::reset(&mut emulator);
     println!("{}", emulator);
 
-    //let mut cycle = 0;
-    // main loop
-    while !emulator.shut_down {
-        cpu::run_cycle(&mut emulator);
-        ppu::run_cycle(&mut emulator);
-        //cycle += 1;
+    init_canvas(&mut emulator).expect("initialization failed");
+}
+
+fn init_canvas(emulator: &mut config::Emulator) -> Result<(), String> {
+    let sdl_context = sdl2::init()?;
+    let video_subsystem = sdl_context.video()?;
+
+    let window = video_subsystem.window("rustyNES", 256, 240)
+        .position_centered()
+        .build()
+        .expect("could not initialize video subsystem");
+
+    let mut canvas = window.into_canvas().build()
+        .expect("could not make a canvas");
+
+    canvas.set_draw_color(Color::RGB(0, 255, 255));
+    canvas.clear();
+    canvas.present();
+    let mut event_pump = sdl_context.event_pump()?;
+    let mut i = 0;
+    'running: loop {
+        i = (i + 1) % 255;
+        canvas.set_draw_color(Color::RGB(i, 64, 255 - i));
+        canvas.clear();
+        for event in event_pump.poll_iter() {
+            match event {
+                Event::Quit {..} |
+                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
+                    break 'running;
+                },
+                _ => {}
+            }
+        }
+        // The rest of the game loop goes here...
+        //while !emulator.shut_down {
+            cpu::run_cycle(emulator);
+            ppu::run_cycle(emulator);
+            //cycle += 1;
+        //}
+
+        canvas.present();
+        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
+
+    Ok(())
 }
