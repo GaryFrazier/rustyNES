@@ -29,43 +29,43 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 158] = [
     }),
     ("ADC - Z",  0x65,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
         adc(emulator, value);
         return 3;
     }),
     ("ADC - ZX",  0x75,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
         adc(emulator, value);
         return 4;
     }),
     ("ADC - A",  0x6D,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
         adc(emulator, value);
         return 4;
     }),
     ("ADC - AX",  0x7D,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, add_cycle) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        let (value, add_cycle) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
         adc(emulator, value);
         return 4 + add_cycle as u32;
     }),
     ("ADC - AY",  0x79,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, add_cycle) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteY { address, y: emulator.cpu.registers.y });
+        let (value, add_cycle) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteY { address, y: emulator.cpu.registers.y });
         adc(emulator, value);
         return 4 + add_cycle as u32;
     }),
     ("ADC - IX",  0x61,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectX { address, x: emulator.cpu.registers.x });
         adc(emulator, value);
         return 6;
     }),
     ("ADC - IY",  0x71,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, add_cycle) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectY { address, y: emulator.cpu.registers.y });
+        let (value, add_cycle) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectY { address, y: emulator.cpu.registers.y });
         adc(emulator, value);
         return 5 + add_cycle as u32;
     }),
@@ -78,43 +78,43 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 158] = [
     }),
     ("AND - Z",  0x25,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
         and(emulator, value);
         return 3;
     }),
     ("AND - ZX",  0x35,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
         and(emulator, value);
         return 4;
     }),
     ("AND - A",  0x2D,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
         and(emulator, value);
         return 4;
     }),
     ("AND - AX",  0x3D,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, add_cycle) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        let (value, add_cycle) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
         and(emulator, value);
         return 4 + add_cycle as u32;
     }),
     ("AND - AY",  0x39,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, add_cycle) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteY { address, y: emulator.cpu.registers.y });
+        let (value, add_cycle) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteY { address, y: emulator.cpu.registers.y });
         and(emulator, value);
         return 4 + add_cycle as u32;
     }),
     ("AND - IX",  0x21,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectX { address, x: emulator.cpu.registers.x });
         and(emulator, value);
         return 6;
     }),
     ("AND - IY",  0x31,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, add_cycle) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectY { address, y: emulator.cpu.registers.y });
+        let (value, add_cycle) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectY { address, y: emulator.cpu.registers.y });
         and(emulator, value);
         return 5 + add_cycle as u32;
     }),
@@ -126,28 +126,28 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 158] = [
     }),
     ("ASL - Z",  0x06,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
         let result = asl(emulator, value);
         cpu::write_with_addressing_mode(emulator, cpu::mapped_address, &[result], ram::AddressingMode::ZeroPage { address });
         return 5;
     }),
     ("ASL - ZX",  0x16,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
         let result = asl(emulator, value);
         cpu::write_with_addressing_mode(emulator, cpu::mapped_address, &[result], ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
         return 6;
     }),
     ("ASL - A",  0x0E,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
         let result = asl(emulator, value);
         cpu::write_with_addressing_mode(emulator, cpu::mapped_address, &[result], ram::AddressingMode::Absolute { address });
         return 6;
     }),
     ("ASL - AX",  0x1E,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
         let result = asl(emulator, value);
         cpu::write_with_addressing_mode(emulator, cpu::mapped_address, &[result], ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
         return 7;
@@ -196,13 +196,13 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 158] = [
     // BIT - Bit Test
     ("BIT - Z",  0x24,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
         bit_test(emulator, value);
         return 3;
     }),
     ("BIT - A",  0x2C,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
         bit_test(emulator, value);
         return 4;
     }),
@@ -246,43 +246,43 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 158] = [
     }),
     ("CMP - Z",  0xC5,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
         cmp(emulator, value);
         return 3;
     }),
     ("CMP - ZX",  0xD5,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
         cmp(emulator, value);
         return 4;
     }),
     ("CMP - A",  0xCD,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
         cmp(emulator, value);
         return 4;
     }),
     ("CMP - AX",  0xDD,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, add_cycle) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        let (value, add_cycle) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
         cmp(emulator, value);
         return 4 + add_cycle as u32;
     }),
     ("CMP - AY",  0xD9,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, add_cycle) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteY { address, y: emulator.cpu.registers.y });
+        let (value, add_cycle) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteY { address, y: emulator.cpu.registers.y });
         cmp(emulator, value);
         return 4 + add_cycle as u32;
     }),
     ("CMP - IX",  0xC1,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectX { address, x: emulator.cpu.registers.x });
         cmp(emulator, value);
         return 6;
     }),
     ("CMP - IY",  0xD1,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, add_cycle) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectY { address, y: emulator.cpu.registers.y });
+        let (value, add_cycle) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectY { address, y: emulator.cpu.registers.y });
         cmp(emulator, value);
         return 5 + add_cycle as u32;
     }),
@@ -295,13 +295,13 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 158] = [
     }),
     ("CPX - Z",  0xE4,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
         cpx(emulator, value);
         return 3;
     }),
     ("CPX - A",  0xEC,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
         cpx(emulator, value);
         return 4;
     }),
@@ -314,13 +314,13 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 158] = [
     }),
     ("CPY - Z",  0xC4,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
         cpy(emulator, value);
         return 3;
     }),
     ("CPY - A",  0xCC,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
         cpy(emulator, value);
         return 4;
     }),
@@ -328,28 +328,28 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 158] = [
     // DEC - Decrement Memory
     ("DEC - Z",  0xC6,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
         let result = dec(emulator, value);
         cpu::write_with_addressing_mode(emulator, cpu::mapped_address, &[result], ram::AddressingMode::ZeroPage { address });
         return 5;
     }),
     ("DEC - ZX",  0xD6,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
         let result = dec(emulator, value);
         cpu::write_with_addressing_mode(emulator, cpu::mapped_address, &[result], ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
         return 6;
     }),
     ("DEC - A",  0xCE,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
         let result = dec(emulator, value);
         cpu::write_with_addressing_mode(emulator, cpu::mapped_address, &[result], ram::AddressingMode::Absolute { address });
         return 6;
     }),
     ("DEC - AX",  0xDE,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
         let result = dec(emulator, value);
         cpu::write_with_addressing_mode(emulator, cpu::mapped_address, &[result], ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
         return 7;
@@ -375,43 +375,43 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 158] = [
     }),
     ("EOR - Z",  0x45,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
         eor(emulator, value);
         return 3;
     }),
     ("EOR - ZX",  0x55,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
         eor(emulator, value);
         return 4;
     }),
     ("EOR - A",  0x4D,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
         eor(emulator, value);
         return 4;
     }),
     ("EOR - AX",  0x5D,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, add_cycle) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        let (value, add_cycle) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
         eor(emulator, value);
         return 4 + add_cycle as u32;
     }),
     ("EOR - AY",  0x59,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, add_cycle) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteY { address, y: emulator.cpu.registers.y });
+        let (value, add_cycle) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteY { address, y: emulator.cpu.registers.y });
         eor(emulator, value);
         return 4 + add_cycle as u32;
     }),
     ("EOR - IX",  0x41,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectX { address, x: emulator.cpu.registers.x });
         eor(emulator, value);
         return 6;
     }),
     ("EOR - IY",  0x51,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, add_cycle) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectY { address, y: emulator.cpu.registers.y });
+        let (value, add_cycle) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectY { address, y: emulator.cpu.registers.y });
         eor(emulator, value);
         return 5 + add_cycle as u32;
     }),
@@ -419,28 +419,28 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 158] = [
     // INC - Increment Memory
     ("INC - Z",  0xE6,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
         let result = inc(emulator, value);
         cpu::write_with_addressing_mode(emulator, cpu::mapped_address, &[result], ram::AddressingMode::ZeroPage { address });
         return 5;
     }),
     ("INC - ZX",  0xF6,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
         let result = inc(emulator, value);
         cpu::write_with_addressing_mode(emulator, cpu::mapped_address, &[result], ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
         return 6;
     }),
     ("INC - A",  0xEE,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
         let result = inc(emulator, value);
         cpu::write_with_addressing_mode(emulator, cpu::mapped_address, &[result], ram::AddressingMode::Absolute { address });
         return 6;
     }),
     ("INC - AX",  0xFE,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
         let result = inc(emulator, value);
         cpu::write_with_addressing_mode(emulator, cpu::mapped_address, &[result], ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
         return 7;
@@ -500,43 +500,43 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 158] = [
     }),
     ("LDA - Z",  0xA5,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
         lda(emulator, value);
         return 3;
     }),
     ("LDA - ZX",  0xB5,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
         lda(emulator, value);
         return 4;
     }),
     ("LDA - A",  0xAD,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
         lda(emulator, value);
         return 4;
     }),
     ("LDA - AX",  0xBD,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, add_cycle) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        let (value, add_cycle) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
         lda(emulator, value);
         return 4 + add_cycle as u32;
     }),
     ("LDA - AY",  0xB9,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, add_cycle) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteY { address, y: emulator.cpu.registers.y });
+        let (value, add_cycle) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteY { address, y: emulator.cpu.registers.y });
         lda(emulator, value);
         return 4 + add_cycle as u32;
     }),
     ("LDA - IX",  0xA1,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectX { address, x: emulator.cpu.registers.x });
         lda(emulator, value);
         return 6;
     }),
     ("LDA - IY",  0xB1,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, add_cycle) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectY { address, y: emulator.cpu.registers.y });
+        let (value, add_cycle) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectY { address, y: emulator.cpu.registers.y });
         lda(emulator, value);
         return 5 + add_cycle as u32;
     }),
@@ -549,25 +549,25 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 158] = [
     }),
     ("LDX - Z",  0xA6,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
         ldx(emulator, value);
         return 3;
     }),
     ("LDX - ZY",  0xB6,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageY { address, y: emulator.cpu.registers.y });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageY { address, y: emulator.cpu.registers.y });
         ldx(emulator, value);
         return 4;
     }),
     ("LDX - A",  0xAE,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
         ldx(emulator, value);
         return 4;
     }),
     ("LDX - AY",  0xBE,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, add_cycle) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteY { address, y: emulator.cpu.registers.y });
+        let (value, add_cycle) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteY { address, y: emulator.cpu.registers.y });
         ldx(emulator, value);
         return 4 + add_cycle as u32;
     }),
@@ -580,25 +580,25 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 158] = [
     }),
     ("LDY - Z",  0xA4,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
         ldy(emulator, value);
         return 3;
     }),
     ("LDY - ZX",  0xB4,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
         ldy(emulator, value);
         return 4;
     }),
     ("LDY - A",  0xAC,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
         ldy(emulator, value);
         return 4;
     }),
     ("LDY - AX",  0xBC,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, add_cycle) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        let (value, add_cycle) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
         ldy(emulator, value);
         return 4 + add_cycle as u32;
     }),
@@ -610,28 +610,28 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 158] = [
     }),
     ("LSR - Z",  0x46,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
         let result = lsr(emulator, value);
         cpu::write_with_addressing_mode(emulator, cpu::mapped_address, &[result], ram::AddressingMode::ZeroPage { address });
         return 5;
     }),
     ("LSR - ZX",  0x56,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
         let result = lsr(emulator, value);
         cpu::write_with_addressing_mode(emulator, cpu::mapped_address, &[result], ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
         return 6;
     }),
     ("LSR - A",  0x4E,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
         let result = lsr(emulator, value);
         cpu::write_with_addressing_mode(emulator, cpu::mapped_address, &[result], ram::AddressingMode::Absolute { address });
         return 6;
     }),
     ("LSR - AX",  0x5E,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
         let result = lsr(emulator, value);
         cpu::write_with_addressing_mode(emulator, cpu::mapped_address, &[result], ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
         return 7;
@@ -650,43 +650,43 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 158] = [
     }),
     ("ORA - Z",  0x05,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
         ora(emulator, value);
         return 3;
     }),
     ("ORA - ZX",  0x15,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
         ora(emulator, value);
         return 4;
     }),
     ("ORA - A",  0x0D,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
         ora(emulator, value);
         return 4;
     }),
     ("ORA - AX",  0x1D,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, add_cycle) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        let (value, add_cycle) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
         eor(emulator, value);
         return 4 + add_cycle as u32;
     }),
     ("ORA - AY",  0x19,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, add_cycle) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteY { address, y: emulator.cpu.registers.y });
+        let (value, add_cycle) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteY { address, y: emulator.cpu.registers.y });
         ora(emulator, value);
         return 4 + add_cycle as u32;
     }),
     ("ORA - IX",  0x01,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectX { address, x: emulator.cpu.registers.x });
         ora(emulator, value);
         return 6;
     }),
     ("ORA - IY",  0x11,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, add_cycle) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectY { address, y: emulator.cpu.registers.y });
+        let (value, add_cycle) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectY { address, y: emulator.cpu.registers.y });
         ora(emulator, value);
         return 5 + add_cycle as u32;
     }),
@@ -724,28 +724,28 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 158] = [
     }),
     ("ROL - Z",  0x26,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
         let result = rol(emulator, value);
         cpu::write_with_addressing_mode(emulator, cpu::mapped_address, &[result], ram::AddressingMode::ZeroPage { address });
         return 5;
     }),
     ("ROL - ZX",  0x36,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
         let result = rol(emulator, value);
         cpu::write_with_addressing_mode(emulator, cpu::mapped_address, &[result], ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
         return 6;
     }),
     ("ROL - A",  0x2E,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
         let result = rol(emulator, value);
         cpu::write_with_addressing_mode(emulator, cpu::mapped_address, &[result], ram::AddressingMode::Absolute { address });
         return 6;
     }),
     ("ROL - AX",  0x3E,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
         let result = rol(emulator, value);
         cpu::write_with_addressing_mode(emulator, cpu::mapped_address, &[result], ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
         return 7;
@@ -758,28 +758,28 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 158] = [
     }),
     ("ROR - Z",  0x66,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
         let result = ror(emulator, value);
         cpu::write_with_addressing_mode(emulator, cpu::mapped_address, &[result], ram::AddressingMode::ZeroPage { address });
         return 5;
     }),
     ("ROR - ZX",  0x76,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
         let result = ror(emulator, value);
         cpu::write_with_addressing_mode(emulator, cpu::mapped_address, &[result], ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
         return 6;
     }),
     ("ROR - A",  0x6E,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
         let result = ror(emulator, value);
         cpu::write_with_addressing_mode(emulator, cpu::mapped_address, &[result], ram::AddressingMode::Absolute { address });
         return 6;
     }),
     ("ROR - AX",  0x7E,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
         let result = ror(emulator, value);
         cpu::write_with_addressing_mode(emulator, cpu::mapped_address, &[result], ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
         return 7;
@@ -807,43 +807,43 @@ pub static OPCODES: [(&str, u8, i32, fn(&mut config::Emulator) -> u32); 158] = [
     }),
     ("SBC - Z",  0xE5,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPage { address });
         sbc(emulator, value);
         return 3;
     }),
     ("SBC - ZX",  0xF5,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::ZeroPageX { address, x: emulator.cpu.registers.x });
         sbc(emulator, value);
         return 4;
     }),
     ("SBC - A",  0xED,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::Absolute { address });
         sbc(emulator, value);
         return 4;
     }),
     ("SBC - AX",  0xFD,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, add_cycle) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
+        let (value, add_cycle) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteX { address, x: emulator.cpu.registers.x });
         sbc(emulator, value);
         return 4 + add_cycle as u32;
     }),
     ("SBC - AY",  0xF9,  3, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_word(emulator);
-        let (value, add_cycle) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteY { address, y: emulator.cpu.registers.y });
+        let (value, add_cycle) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::AbsoluteY { address, y: emulator.cpu.registers.y });
         sbc(emulator, value);
         return 4 + add_cycle as u32;
     }),
     ("SBC - IX",  0xE1,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, _) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectX { address, x: emulator.cpu.registers.x });
+        let (value, _) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectX { address, x: emulator.cpu.registers.x });
         sbc(emulator, value);
         return 6;
     }),
     ("SBC - IY",  0xF1,  2, |emulator: &mut config::Emulator| -> u32 {
         let address = cpu::read_program_byte(emulator);
-        let (value, add_cycle) = ram::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectY { address, y: emulator.cpu.registers.y });
+        let (value, add_cycle) = cpu::read_with_addressing_mode(emulator, cpu::mapped_address, ram::AddressingMode::IndirectY { address, y: emulator.cpu.registers.y });
         sbc(emulator, value);
         return 5 + add_cycle as u32;
     }),

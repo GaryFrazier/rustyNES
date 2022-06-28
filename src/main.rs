@@ -48,7 +48,6 @@ fn init_canvas(emulator: &mut config::Emulator) -> Result<(), String> {
     let mut event_pump = sdl_context.event_pump()?;
     //let mut cycle = 0;
     'running: loop {
-        //cycle = (cycle + 1) % ppu::CYCLES_PER_SCANLINE;
         //canvas.set_draw_color(Color::RGB(cycle, 64, 255 - i));
         canvas.clear();
         for event in event_pump.poll_iter() {

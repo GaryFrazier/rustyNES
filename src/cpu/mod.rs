@@ -2,6 +2,7 @@ mod register;
 mod instructions;
 use std::fmt;
 use crate::config;
+use crate::ppu;
 use crate::ram;
 use crate::ram::AddressingMode;
 /* 
@@ -206,21 +207,29 @@ fn handle_ppu_memory_read(emulator: &mut config::Emulator, address: usize) -> Op
             //return Some(data);
         },
         0x2007 => {
+            let mut data: u8;
             // Reads from the NameTable ram get delayed one cycle, 
             // so output buffer which contains the data from the 
             // previous read request
-            data = ppu_data_buffer;
+            data = emulator.ppu.ppu_data;
             // then update the buffer for next time
-            ppu_data_buffer = ppuRead(vram_addr.reg);
+            emulator.ppu.ppu_data = ram::read_u8(mapped_address, &mut emulator.ppu.memory, emulator.ppu.ppu_addr.into());
             // However, if the address was in the palette range, the
             // data is not delayed, so it returns immediately
-            if (vram_addr.reg >= 0x3F00) data = ppu_data_buffer;
+            if emulator.ppu.ppu_addr >= 0x3F00 {
+                data = emulator.ppu.ppu_data
+            }
             // All reads from PPU data automatically increment the nametable
             // address depending upon the mode set in the control register.
             // If set to vertical mode, the increment is 32, so it skips
             // one whole nametable row; in horizontal mode it just increments
             // by 1, moving to the next column
-            vram_addr.reg += (control.increment_mode ? 32 : 1);
+            let mut ppu_increment = 1;
+            if ppu::get_control_increment_mode(emulator) {
+                ppu_increment = 32; 
+            }
+
+            emulator.ppu.ppu_addr += ppu_increment;
             return Some(data);
         },
         _ => {
@@ -243,21 +252,26 @@ fn handle_ppu_memory_write(emulator: &mut config::Emulator, address: usize, data
         },
         0x2006 => {
             if emulator.ppu.ppu_addr_latch == false {
-                emulator.ppu.ppu_addr = (emulator.ppu.ppu_addr & 0xFF00) | data[0];
+                emulator.ppu.ppu_addr = (emulator.ppu.ppu_addr & 0xFF00) | data[0] as u16;
                 emulator.ppu.ppu_addr_latch = true;
             } else {
-                emulator.ppu.ppu_addr = (emulator.ppu.ppu_addr & 0x00FF) | (data[0] << 8);
+                emulator.ppu.ppu_addr = (emulator.ppu.ppu_addr & 0x00FF) | ((data[0] as u16) << 8);
                 emulator.ppu.ppu_addr_latch = false;
             }
         },
         0x2007 => {
-            ppuWrite(vram_addr.reg, data);
+            ram::write_block(ppu::mapped_address, &mut emulator.ppu.memory, emulator.ppu.ppu_addr.into(), data);
             // All writes from PPU data automatically increment the nametable
             // address depending upon the mode set in the control register.
             // If set to vertical mode, the increment is 32, so it skips
             // one whole nametable row; in horizontal mode it just increments
             // by 1, moving to the next column
-            emulator.ppu.ppu_addr += ppu::get_control_increment_mode(emulator) ? 32 : 1
+            let mut ppu_increment = 1;
+            if ppu::get_control_increment_mode(emulator) {
+                ppu_increment = 32; 
+            }
+
+            emulator.ppu.ppu_addr +=  ppu_increment;
         },
         _ => {
 
@@ -317,9 +331,9 @@ pub fn read_with_addressing_mode(emulator: &mut config::Emulator, addr_mapper: f
             page_cross = false;
         },
         AddressingMode::IndirectY { address, y } => {
-            let indexed_value = read_u16(addr_mapper, &mut emulator.cpu.memory, address.into());
+            let indexed_value = ram::read_u16(addr_mapper, &mut emulator.cpu.memory, address.into());
             let calculated_address: u16 = indexed_value.wrapping_add(y as u16);
-            value =  read_u8(emultaor, addr_mapper, calculated_address.into());
+            value =  read_u8(emulator, addr_mapper, calculated_address.into());
             page_cross = calculated_address > 0xFF;
         },
     }
@@ -328,7 +342,7 @@ pub fn read_with_addressing_mode(emulator: &mut config::Emulator, addr_mapper: f
 }
 
 pub fn write_block(emulator: &mut config::Emulator, addr_mapper: fn(usize)-> usize, address: usize, data: &[u8]) {
-    handle_ppu_memory_write(emulator);
+    handle_ppu_memory_write(emulator, address, data);
     ram::write_block(addr_mapper, &mut emulator.cpu.memory, address, data);
 }
 

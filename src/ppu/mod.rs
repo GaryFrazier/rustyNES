@@ -20,12 +20,12 @@ use crate::config;
     $03, $07, $0B, $0F	Sprite X coordinate
 */
 
-static SCREEN_WIDTH: i32 = 256;
-static SCREEN_HEIGHT: i32 = 240;
+//static SCREEN_WIDTH: u32 = 256;
+//static SCREEN_HEIGHT: u32 = 240;
 
 // index 0 based
-static TOTAL_SCANLINES: i32 = 262; // Vblank beyond screen height, 261 is pre render line
-pub static CYCLES_PER_SCANLINE: i32 = 341;
+static TOTAL_SCANLINES: u32 = 262; // Vblank beyond screen height, 261 is pre render line
+static CYCLES_PER_SCANLINE: u32 = 341;
 
 pub struct PPU {
     pub memory: [u8; 0x4000],
@@ -41,7 +41,7 @@ pub struct PPU {
     pub ppu_addr_latch: bool,
     pub ppu_scroll: u8,
     pub ppu_addr: u16,
-    pub ppu_data: u16,
+    pub ppu_data: u8,
     pub odd_frame: bool,
 }
 
@@ -87,21 +87,21 @@ pub fn mapped_address(addr: usize) -> usize {
 
 pub fn run_cycle(emulator: &mut config::Emulator) {
     match emulator.ppu.scanline {
-        0..=239 => process_visible_scanline(),
-        240 => process_post_scanline(),
-        241 => process_nmi(),
-        261 => process_pre_scanline(),
+        0..=239 => process_visible_scanline(emulator),
+        240 => process_post_scanline(emulator),
+        241 => process_nmi(emulator),
+        261 => process_pre_scanline(emulator),
+        _ => println!("Invalid Scanline Detected")
     }
 
     // Update cycle and scanline counters:
     emulator.ppu.cycle += 1;
-    if emulator.ppu.cycle > 340 {
-        emulator.ppu.cycle %= 341;
-        emulator.ppu.scanline += 1
-        if (emulator.ppu.scanline > 261)
-        {
+    if emulator.ppu.cycle >= CYCLES_PER_SCANLINE {
+        emulator.ppu.cycle %= CYCLES_PER_SCANLINE;
+        emulator.ppu.scanline += 1;
+        if emulator.ppu.scanline >= TOTAL_SCANLINES {
             emulator.ppu.scanline = 0;
-            emulator.ppu.odd_frame ^= 1;
+            emulator.ppu.odd_frame = !emulator.ppu.odd_frame;
         }
     }
 }
@@ -135,4 +135,16 @@ pub fn reset(emulator: &mut config::Emulator) {
     emulator.ppu.ppu_addr = 0;
     emulator.ppu.ppu_data = 0;
     emulator.ppu.odd_frame = false;
+}
+
+pub fn get_control_increment_mode(emulator: &mut config::Emulator) -> bool {
+    return emulator.ppu.ppu_status & 0x04 == 0x04;
+}
+
+pub fn set_vblank(emulator: &mut config::Emulator, value: bool) {
+    if value {
+        emulator.ppu.ppu_status |= 0b1000_0000;
+    } else {
+        emulator.ppu.ppu_status &= 0b0111_1111;
+    }
 }
