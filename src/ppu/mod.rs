@@ -119,7 +119,13 @@ fn process_nmi(emulator: &mut config::Emulator) {
 }
 
 fn process_pre_scanline(emulator: &mut config::Emulator) {
-    
+    if emulator.ppu.odd_frame && emulator.ppu.cycle == CYCLES_PER_SCANLINE - 1 {
+        emulator.ppu.cycle += 1; // if odd frame skip last cycle
+    }
+
+    if emulator.ppu.cycle == 1 {
+        set_vblank(emulator, false);
+    }
 }
 
 pub fn reset(emulator: &mut config::Emulator) {
